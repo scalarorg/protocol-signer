@@ -50,7 +50,7 @@ var runSignerCmd = &cobra.Command{
 		chainInfo := signerapp.NewBitcoindChainInfo(fullNodeClient)
 
 		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
-
+		// evmClient, err := evmclient.NewEvmClient(parsedConfig.EvmConfigs[0])
 		if err != nil {
 			return err
 		}

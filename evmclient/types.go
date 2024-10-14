@@ -31,7 +31,7 @@ func ParseFinalityOverride(s string) (FinalityOverride, error) {
 	switch strings.ToLower(s) {
 	case "":
 		return NoOverride, nil
-	case strings.ToLower(Confirmation.String()):
+	case strings.ToLower(string(Confirmation.String())):
 		return Confirmation, nil
 	default:
 		return -1, fmt.Errorf("invalid finality override option")
