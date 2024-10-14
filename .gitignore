@@ -20,6 +20,8 @@
 # Go workspace file
 go.work
 go.work.sum
-
+# Binary file
+protocol-signer
 # env file
 .env
+.DS_Store   // macOS system file
