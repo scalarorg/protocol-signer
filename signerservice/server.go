@@ -50,7 +50,7 @@ func New(
 		Handler:      r,
 	}
 
-	h, err := handlers.NewHandler(ctx, signer, metrics)
+	h, err := handlers.NewHandler(ctx, cfg.ServerConfig.AccessToken, signer, metrics)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while setting up handlers")
 	}

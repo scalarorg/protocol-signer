@@ -62,3 +62,6 @@ type SigningResult struct {
 type ExternalBtcSigner interface {
 	RawSignature(ctx context.Context, request *SigningRequest) (*SigningResult, error)
 }
+
+type ExternalEvmClient interface {
+}

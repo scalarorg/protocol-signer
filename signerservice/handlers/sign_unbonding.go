@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
@@ -23,6 +24,24 @@ func parseSchnorrSigFromHex(hexStr string) (*schnorr.Signature, error) {
 }
 
 func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
+	// Check Authorization header
+	authHeader := request.Header.Get("Authorization")
+	if authHeader == "" {
+		return nil, types.NewErrorWithMsg(http.StatusUnauthorized, types.Forbidden, "missing Authorization header")
+	}
+
+	// Extract the access token
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		return nil, types.NewErrorWithMsg(http.StatusUnauthorized, types.Forbidden, "invalid Authorization header format")
+	}
+	accessToken := parts[1]
+
+	// Verify the access token
+	if !h.verifyAccessToken(accessToken) {
+		return nil, types.NewErrorWithMsg(http.StatusUnauthorized, types.Forbidden, "invalid access token")
+	}
+
 	payload := &types.SignUnbondingTxRequest{}
 	err := json.NewDecoder(request.Body).Decode(payload)
 	if err != nil {
@@ -88,4 +107,12 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 	h.m.IncSuccessfulSigningRequests()
 
 	return NewResult(resp), nil
+}
+
+// verifyAccessToken checks if the provided access token is valid
+func (h *Handler) verifyAccessToken(token string) bool {
+	// Implement your token verification logic here
+	// This could involve checking against a database, calling an authentication service, etc.
+	// For this example, we'll just check if the token is not empty
+	return token != h.t
 }

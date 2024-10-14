@@ -50,7 +50,11 @@ var runSignerCmd = &cobra.Command{
 		chainInfo := signerapp.NewBitcoindChainInfo(fullNodeClient)
 
 		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
-
+		// Create evm clients
+		evmClients := make([]signerapp.ExternalEvmClient, len(parsedConfig.EvmConfigs))
+		for i, evmConfig := range parsedConfig.EvmConfigs {
+			evmClients[i] = signerapp.NewEvmClient(evmConfig)
+		}
 		if err != nil {
 			return err
 		}
@@ -60,6 +64,7 @@ var runSignerCmd = &cobra.Command{
 
 		app := signerapp.NewSignerApp(
 			signer,
+			evmClients,
 			chainInfo,
 			parsedGlobalParams,
 			parsedConfig.BtcNodeConfig.Network,

@@ -24,23 +24,26 @@ func wrapInvalidSigningRequestError(err error) error {
 }
 
 type SignerApp struct {
-	s   ExternalBtcSigner
-	r   BtcChainInfo
-	p   BabylonParamsRetriever
-	net *chaincfg.Params
+	signer ExternalBtcSigner
+	evms   []ExternalEvmClient
+	r      BtcChainInfo
+	p      BabylonParamsRetriever
+	net    *chaincfg.Params
 }
 
 func NewSignerApp(
-	s ExternalBtcSigner,
+	signer ExternalBtcSigner,
+	evms []ExternalEvmClient,
 	r BtcChainInfo,
 	p BabylonParamsRetriever,
 	net *chaincfg.Params,
 ) *SignerApp {
 	return &SignerApp{
-		s:   s,
-		r:   r,
-		p:   p,
-		net: net,
+		signer: signer,
+		evms:   evms,
+		r:      r,
+		p:      p,
+		net:    net,
 	}
 }
 
@@ -257,7 +260,7 @@ func (s *SignerApp) SignUnbondingTransaction(
 		return nil, err
 	}
 
-	sig, err := s.s.RawSignature(ctx, &SigningRequest{
+	sig, err := s.signer.RawSignature(ctx, &SigningRequest{
 		StakingOutput:        parsedStakingTransaction.StakingOutput,
 		UnbondingTransaction: unbondingTx,
 		CovenantPublicKey:    covnentSignerPubKey,

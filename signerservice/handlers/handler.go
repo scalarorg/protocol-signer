@@ -9,6 +9,7 @@ import (
 )
 
 type Handler struct {
+	t string
 	s *s.SignerApp
 	m *m.CovenantSignerMetrics
 }
@@ -28,9 +29,10 @@ func NewResult[T any](data T) *Result {
 }
 
 func NewHandler(
-	_ context.Context, s *s.SignerApp, m *m.CovenantSignerMetrics,
+	_ context.Context, t string, s *s.SignerApp, m *m.CovenantSignerMetrics,
 ) (*Handler, error) {
 	return &Handler{
+		t: t,
 		s: s,
 		m: m,
 	}, nil
