@@ -141,26 +141,3 @@ func (mr *MockExternalBtcSignerMockRecorder) RawSignature(ctx, request interface
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawSignature", reflect.TypeOf((*MockExternalBtcSigner)(nil).RawSignature), ctx, request)
 }
-
-// MockExternalEvmClient is a mock of ExternalEvmClient interface.
-type MockExternalEvmClient struct {
-	ctrl     *gomock.Controller
-	recorder *MockExternalEvmClientMockRecorder
-}
-
-// MockExternalEvmClientMockRecorder is the mock recorder for MockExternalEvmClient.
-type MockExternalEvmClientMockRecorder struct {
-	mock *MockExternalEvmClient
-}
-
-// NewMockExternalEvmClient creates a new mock instance.
-func NewMockExternalEvmClient(ctrl *gomock.Controller) *MockExternalEvmClient {
-	mock := &MockExternalEvmClient{ctrl: ctrl}
-	mock.recorder = &MockExternalEvmClientMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockExternalEvmClient) EXPECT() *MockExternalEvmClientMockRecorder {
-	return m.recorder
-}

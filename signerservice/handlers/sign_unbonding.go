@@ -9,6 +9,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/scalarorg/protocol-signer/signerapp"
 	"github.com/scalarorg/protocol-signer/signerservice/types"
 	"github.com/scalarorg/protocol-signer/utils"
@@ -78,6 +79,17 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "invalid staker unbonding signature")
 	}
 
+	// Check if unbonding is valid on the source chain
+	evmClient, err := h.getEvmClient(payload.ChainName)
+
+	if err != nil {
+		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Chain not found")
+	}
+	txHash := common.HexToHash(payload.TxId)
+	err = evmClient.CheckUnbondingTx(request.Context(), txHash, &payload.UnbondingTxHex)
+	if err != nil {
+		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Unbonding transaction is not valid on the source chain")
+	}
 	// do not count the requests with invalid arguments
 	h.m.IncReceivedSigningRequests()
 

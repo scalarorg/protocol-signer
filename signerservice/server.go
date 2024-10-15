@@ -49,8 +49,12 @@ func New(
 		IdleTimeout:  cfg.ServerConfig.IdleTimeout,
 		Handler:      r,
 	}
-
-	h, err := handlers.NewHandler(ctx, cfg.ServerConfig.AccessToken, signer, metrics)
+	// Create evm clients
+	evmClients := make([]handlers.ExternalEvmClient, len(cfg.EvmConfigs))
+	for i, evmConfig := range cfg.EvmConfigs {
+		evmClients[i] = handlers.NewEvmClient(evmConfig)
+	}
+	h, err := handlers.NewHandler(ctx, cfg.ServerConfig.AccessToken, evmClients, signer, metrics)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while setting up handlers")
 	}

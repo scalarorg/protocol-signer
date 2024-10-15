@@ -57,7 +57,6 @@ type MockedDependencies struct {
 	pr     *mocks.MockBabylonParamsRetriever
 	bi     *mocks.MockBtcChainInfo
 	signer *mocks.MockExternalBtcSigner
-	evm    *mocks.MockExternalEvmClient
 	params *signerapp.BabylonParams
 }
 
@@ -83,7 +82,6 @@ func NewMockedDependencies(t *testing.T) *MockedDependencies {
 		pr:     mocks.NewMockBabylonParamsRetriever(ctrl),
 		bi:     mocks.NewMockBtcChainInfo(ctrl),
 		signer: mocks.NewMockExternalBtcSigner(ctrl),
-		evm:    mocks.NewMockExternalEvmClient(ctrl),
 		params: parserParamsToBabylonParams(parsed.Versions[0]),
 	}
 }
@@ -163,7 +161,7 @@ func NewValidTestData(t *testing.T, params *signerapp.BabylonParams) *TestData {
 
 func TestValidSigningRequest(t *testing.T) {
 	deps := NewMockedDependencies(t)
-	signerApp := signerapp.NewSignerApp(deps.signer, []signerapp.ExternalEvmClient{deps.evm}, deps.bi, deps.pr, &net)
+	signerApp := signerapp.NewSignerApp(deps.signer, deps.bi, deps.pr, &net)
 	validData := NewValidTestData(t, deps.params)
 
 	deps.bi.EXPECT().TxByHash(
@@ -197,7 +195,7 @@ func TestValidSigningRequest(t *testing.T) {
 
 func TestErrRequestNotCovenantMember(t *testing.T) {
 	deps := NewMockedDependencies(t)
-	signerApp := signerapp.NewSignerApp(deps.signer, []signerapp.ExternalEvmClient{deps.evm}, deps.bi, deps.pr, &net)
+	signerApp := signerapp.NewSignerApp(deps.signer, deps.bi, deps.pr, &net)
 	validData := NewValidTestData(t, deps.params)
 
 	deps.bi.EXPECT().TxByHash(

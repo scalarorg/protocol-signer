@@ -30,9 +30,9 @@ network = "regtest"
 
 [[evm-config]]
 # Evm chain id
-chain-id = 31337
+chain-id = 11155111
 # Evm chain name
-chain-name = "scalar"
+chain-name = "ethereum-sepolia"
 # Evm chain rpc url
 chain-rpc-url = "http://localhost:8545"
 finality-override = "confirmation"

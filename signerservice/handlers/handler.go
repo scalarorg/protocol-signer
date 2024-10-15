@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	m "github.com/scalarorg/protocol-signer/observability/metrics"
@@ -9,9 +10,10 @@ import (
 )
 
 type Handler struct {
-	t string
-	s *s.SignerApp
-	m *m.CovenantSignerMetrics
+	t    string
+	evms []ExternalEvmClient
+	s    *s.SignerApp
+	m    *m.CovenantSignerMetrics
 }
 
 type Result struct {
@@ -29,11 +31,21 @@ func NewResult[T any](data T) *Result {
 }
 
 func NewHandler(
-	_ context.Context, t string, s *s.SignerApp, m *m.CovenantSignerMetrics,
+	_ context.Context, t string, evms []ExternalEvmClient, s *s.SignerApp, m *m.CovenantSignerMetrics,
 ) (*Handler, error) {
 	return &Handler{
-		t: t,
-		s: s,
-		m: m,
+		t:    t,
+		evms: evms,
+		s:    s,
+		m:    m,
 	}, nil
+}
+
+func (h *Handler) getEvmClient(chainName string) (ExternalEvmClient, error) {
+	for _, evm := range h.evms {
+		if evm.ChainName() == chainName {
+			return evm, nil
+		}
+	}
+	return nil, fmt.Errorf("evm client not found for chain name: %s", chainName)
 }
