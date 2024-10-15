@@ -56,7 +56,7 @@ var (
 type MockedDependencies struct {
 	pr     *mocks.MockBabylonParamsRetriever
 	bi     *mocks.MockBtcChainInfo
-	s      *mocks.MockExternalBtcSigner
+	signer *mocks.MockExternalBtcSigner
 	params *signerapp.BabylonParams
 }
 
@@ -81,7 +81,7 @@ func NewMockedDependencies(t *testing.T) *MockedDependencies {
 	return &MockedDependencies{
 		pr:     mocks.NewMockBabylonParamsRetriever(ctrl),
 		bi:     mocks.NewMockBtcChainInfo(ctrl),
-		s:      mocks.NewMockExternalBtcSigner(ctrl),
+		signer: mocks.NewMockExternalBtcSigner(ctrl),
 		params: parserParamsToBabylonParams(parsed.Versions[0]),
 	}
 }
@@ -161,7 +161,7 @@ func NewValidTestData(t *testing.T, params *signerapp.BabylonParams) *TestData {
 
 func TestValidSigningRequest(t *testing.T) {
 	deps := NewMockedDependencies(t)
-	signerApp := signerapp.NewSignerApp(deps.s, deps.bi, deps.pr, &net)
+	signerApp := signerapp.NewSignerApp(deps.signer, deps.bi, deps.pr, &net)
 	validData := NewValidTestData(t, deps.params)
 
 	deps.bi.EXPECT().TxByHash(
@@ -176,7 +176,7 @@ func TestValidSigningRequest(t *testing.T) {
 	deps.bi.EXPECT().BestBlockHeight(gomock.Any()).Return(uint32(300), nil)
 	deps.pr.EXPECT().ParamsByHeight(gomock.Any(), uint64(200)).Return(deps.params, nil)
 	// return staker signature from mock, as it does not matter for test correctness
-	deps.s.EXPECT().RawSignature(gomock.Any(), gomock.Any()).Return(&signerapp.SigningResult{
+	deps.signer.EXPECT().RawSignature(gomock.Any(), gomock.Any()).Return(&signerapp.SigningResult{
 		Signature: validData.UnbondingTxStakerSig,
 	}, nil)
 
@@ -195,7 +195,7 @@ func TestValidSigningRequest(t *testing.T) {
 
 func TestErrRequestNotCovenantMember(t *testing.T) {
 	deps := NewMockedDependencies(t)
-	signerApp := signerapp.NewSignerApp(deps.s, deps.bi, deps.pr, &net)
+	signerApp := signerapp.NewSignerApp(deps.signer, deps.bi, deps.pr, &net)
 	validData := NewValidTestData(t, deps.params)
 
 	deps.bi.EXPECT().TxByHash(

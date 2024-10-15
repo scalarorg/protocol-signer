@@ -30,11 +30,12 @@ network = "regtest"
 
 [[evm-config]]
 # Evm chain id
-chain-id = 31337
+chain-id = 11155111
 # Evm chain name
-chain-name = "scalar"
+chain-name = "ethereum-sepolia"
 # Evm chain rpc url
 chain-rpc-url = "http://localhost:8545"
+finality-override = "confirmation"
 # Evm chain address
 smart-contract-address = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"    
 
@@ -56,7 +57,8 @@ idle-timeout = 120
 
 # Max content length in bytes
 max-content-length = 8192
-
+# 
+access-token = ""
 [metrics]
 # The prometheus server host
 host = "127.0.0.1"

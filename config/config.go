@@ -189,7 +189,7 @@ func GetConfig(pathToConfFile string) (*Config, error) {
 	}
 
 	conf := DefaultConfig()
-	if err := viper.Unmarshal(conf); err != nil {
+	if err := viper.Unmarshal(conf, AddDecodeHooks); err != nil {
 		return nil, err
 	}
 

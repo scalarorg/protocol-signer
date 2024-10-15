@@ -8,9 +8,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	signerapp "github.com/scalarorg/protocol-signer/signerapp"
 	chainhash "github.com/btcsuite/btcd/chaincfg/chainhash"
 	gomock "github.com/golang/mock/gomock"
+	signerapp "github.com/scalarorg/protocol-signer/signerapp"
 )
 
 // MockBabylonParamsRetriever is a mock of BabylonParamsRetriever interface.

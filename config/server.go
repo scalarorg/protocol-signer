@@ -9,6 +9,7 @@ type ServerConfig struct {
 	ReadTimeout      uint   `mapstructure:"read-timeout"`
 	IdleTimeout      uint   `mapstructure:"idle-timeout"`
 	MaxContentLength uint32 `mapstructure:"max-content-length"`
+	AccessToken      string `mapstructure:"access-token"`
 }
 
 type ParsedServerConfig struct {
@@ -18,6 +19,7 @@ type ParsedServerConfig struct {
 	ReadTimeout      time.Duration
 	IdleTimeout      time.Duration
 	MaxContentLength uint32
+	AccessToken      string
 }
 
 func (c *ServerConfig) Parse() (*ParsedServerConfig, error) {
@@ -29,6 +31,7 @@ func (c *ServerConfig) Parse() (*ParsedServerConfig, error) {
 		ReadTimeout:      time.Duration(c.ReadTimeout) * time.Second,
 		IdleTimeout:      time.Duration(c.IdleTimeout) * time.Second,
 		MaxContentLength: c.MaxContentLength,
+		AccessToken:      c.AccessToken,
 	}, nil
 }
 
@@ -40,5 +43,6 @@ func DefaultServerConfig() *ServerConfig {
 		ReadTimeout:      15,
 		IdleTimeout:      120,
 		MaxContentLength: 8192,
+		AccessToken:      "",
 	}
 }
