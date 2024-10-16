@@ -52,6 +52,16 @@ type BtcClient struct {
 	RpcClient *rpcclient.Client
 }
 
+type PsbtSigner struct {
+	client *BtcClient
+}
+
+func NewPsbtSigner(client *BtcClient) *PsbtSigner {
+	return &PsbtSigner{
+		client: client,
+	}
+}
+
 func btcConfigToConnConfig(cfg *config.ParsedBtcConfig) *rpcclient.ConnConfig {
 	return &rpcclient.ConnConfig{
 		Host:                 cfg.Host,
@@ -311,14 +321,42 @@ func (w *BtcClient) TxDetails(txHash *chainhash.Hash, pkScript []byte) (*notifie
 	return res, nofitierStateToClientState(state), nil
 }
 
-func (w *BtcClient) SignPsbt(packet *psbt.Packet) (*psbt.Packet, error) {
-	psbtEncoded, err := packet.B64Encode()
+func (w *BtcClient) BestBlockHeight() (uint32, error) {
+	count, err := w.RpcClient.GetBlockCount()
 
+	if err != nil {
+		return 0, err
+	}
+
+	return uint32(count), nil
+}
+
+func (w *BtcClient) SignPsbt(packet *psbt.Packet) (*psbt.Packet, error) {
+	// psbtEncoded, err := packet.B64Encode()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// decodedBytes, err := base64.StdEncoding.DecodeString(result.Psbt)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// decoded, err := psbt.NewFromRawBytes(bytes.NewReader(decodedBytes), false)
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// return decoded, nil
+	return nil, nil
+}
+
+func (w *BtcClient) SignPsbt2(packet *psbt.Packet) (*psbt.Packet, error) {
+	psbtEncoded, err := packet.B64Encode()
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("psbtEncoded: ", psbtEncoded)
 
 	sign := true
 	result, err := w.RpcClient.WalletProcessPsbt(
@@ -334,7 +372,6 @@ func (w *BtcClient) SignPsbt(packet *psbt.Packet) (*psbt.Packet, error) {
 	}
 
 	decodedBytes, err := base64.StdEncoding.DecodeString(result.Psbt)
-
 	if err != nil {
 		return nil, err
 	}
@@ -346,14 +383,4 @@ func (w *BtcClient) SignPsbt(packet *psbt.Packet) (*psbt.Packet, error) {
 	}
 
 	return decoded, nil
-}
-
-func (w *BtcClient) BestBlockHeight() (uint32, error) {
-	count, err := w.RpcClient.GetBlockCount()
-
-	if err != nil {
-		return 0, err
-	}
-
-	return uint32(count), nil
 }

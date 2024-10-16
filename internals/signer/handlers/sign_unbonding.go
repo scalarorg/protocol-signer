@@ -67,6 +67,10 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "invalid psbt packet")
 	}
 
+	encoded, _ := psbtPacket.B64Encode()
+
+	fmt.Println("Encoded: ", encoded)
+
 	result, err := h.signer.SignPsbt(psbtPacket)
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
