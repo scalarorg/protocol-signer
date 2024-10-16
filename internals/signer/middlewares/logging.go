@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/scalarorg/protocol-signer/observability/tracing"
-
 	"github.com/rs/zerolog/log"
+	"github.com/scalarorg/protocol-signer/packages/observability/tracing"
 )
 
 func LoggingMiddleware(next http.Handler) http.Handler {

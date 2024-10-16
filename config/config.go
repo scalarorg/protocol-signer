@@ -8,34 +8,32 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/scalarorg/protocol-signer/packages/evm"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	// TODO: Separate config for signing node and for full node
-	BtcNodeConfig   BtcConfig     `mapstructure:"btc-config"`
-	BtcSignerConfig BtcConfig     `mapstructure:"btc-signer-config"`
-	EvmConfigs      []EvmConfig   `mapstructure:"evm-config"`
-	Server          ServerConfig  `mapstructure:"server-config"`
-	Metrics         MetricsConfig `mapstructure:"metrics"`
+	BtcNodeConfig BtcConfig       `mapstructure:"btc-config"`
+	EvmConfigs    []evm.EvmConfig `mapstructure:"evm-config"`
+	Server        ServerConfig    `mapstructure:"server-config"`
+	Metrics       MetricsConfig   `mapstructure:"metrics"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		BtcNodeConfig:   *DefaultBtcConfig(),
-		BtcSignerConfig: *DefaultBtcConfig(),
-		EvmConfigs:      []EvmConfig{*DefaultEvmConfig()},
-		Server:          *DefaultServerConfig(),
-		Metrics:         *DefaultMetricsConfig(),
+		BtcNodeConfig: *DefaultBtcConfig(),
+		EvmConfigs:    []evm.EvmConfig{*evm.DefaultEvmConfig()},
+		Server:        *DefaultServerConfig(),
+		Metrics:       *DefaultMetricsConfig(),
 	}
 }
 
 type ParsedConfig struct {
-	BtcNodeConfig   *ParsedBtcConfig
-	BtcSignerConfig *ParsedBtcConfig
-	EvmConfigs      []EvmConfig
-	ServerConfig    *ParsedServerConfig
-	MetricsConfig   *ParsedMetricsConfig
+	BtcNodeConfig *ParsedBtcConfig
+	EvmConfigs    []evm.EvmConfig
+	ServerConfig  *ParsedServerConfig
+	MetricsConfig *ParsedMetricsConfig
 }
 
 func (cfg *Config) Parse() (*ParsedConfig, error) {
@@ -44,30 +42,21 @@ func (cfg *Config) Parse() (*ParsedConfig, error) {
 		return nil, err
 	}
 
-	btcSignerConfig, err := cfg.BtcSignerConfig.Parse()
-
-	if err != nil {
-		return nil, err
-	}
-
 	serverConfig, err := cfg.Server.Parse()
-
 	if err != nil {
 		return nil, err
 	}
 
 	metricsConfig, err := cfg.Metrics.Parse()
-
 	if err != nil {
 		return nil, err
 	}
 
 	return &ParsedConfig{
-		BtcNodeConfig:   btcConfig,
-		BtcSignerConfig: btcSignerConfig,
-		EvmConfigs:      cfg.EvmConfigs,
-		ServerConfig:    serverConfig,
-		MetricsConfig:   metricsConfig,
+		BtcNodeConfig: btcConfig,
+		EvmConfigs:    cfg.EvmConfigs,
+		ServerConfig:  serverConfig,
+		MetricsConfig: metricsConfig,
 	}, nil
 }
 

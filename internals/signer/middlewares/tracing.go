@@ -3,7 +3,7 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/scalarorg/protocol-signer/observability/tracing"
+	"github.com/scalarorg/protocol-signer/packages/observability/tracing"
 )
 
 func TracingMiddleware(next http.Handler) http.Handler {

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	logger "github.com/rs/zerolog"
-	"github.com/scalarorg/protocol-signer/signerservice/handlers"
-	"github.com/scalarorg/protocol-signer/signerservice/types"
+	"github.com/scalarorg/protocol-signer/internals/signer/handlers"
+	"github.com/scalarorg/protocol-signer/packages/types"
 )
 
 type ErrorResponse struct {

@@ -1,19 +1,16 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
-	m "github.com/scalarorg/protocol-signer/observability/metrics"
-	s "github.com/scalarorg/protocol-signer/signerapp"
+	"github.com/scalarorg/protocol-signer/packages/btc"
+	"github.com/scalarorg/protocol-signer/packages/evm"
 )
 
 type Handler struct {
-	t    string
-	evms []ExternalEvmClient
-	s    *s.SignerApp
-	m    *m.CovenantSignerMetrics
+	evms   []evm.EvmClient
+	signer *btc.PsbtSigner
 }
 
 type Result struct {
@@ -30,21 +27,17 @@ func NewResult[T any](data T) *Result {
 	return &Result{Data: res, Status: http.StatusOK}
 }
 
-func NewHandler(
-	_ context.Context, t string, evms []ExternalEvmClient, s *s.SignerApp, m *m.CovenantSignerMetrics,
-) (*Handler, error) {
+func NewHandler(evms []evm.EvmClient, s *btc.PsbtSigner) (*Handler, error) {
 	return &Handler{
-		t:    t,
-		evms: evms,
-		s:    s,
-		m:    m,
+		evms:   evms,
+		signer: s,
 	}, nil
 }
 
-func (h *Handler) getEvmClient(chainName string) (ExternalEvmClient, error) {
+func (h *Handler) getEvmClient(chainName string) (*evm.EvmClient, error) {
 	for _, evm := range h.evms {
 		if evm.ChainName() == chainName {
-			return evm, nil
+			return &evm, nil
 		}
 	}
 	return nil, fmt.Errorf("evm client not found for chain name: %s", chainName)

@@ -1,4 +1,4 @@
-package btcclient
+package btc
 
 import (
 	"bytes"
@@ -317,6 +317,8 @@ func (w *BtcClient) SignPsbt(packet *psbt.Packet) (*psbt.Packet, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("psbtEncoded: ", psbtEncoded)
 
 	sign := true
 	result, err := w.RpcClient.WalletProcessPsbt(

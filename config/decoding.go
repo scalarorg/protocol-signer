@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/scalarorg/protocol-signer/evmclient"
+	"github.com/scalarorg/protocol-signer/packages/evm"
 )
 
 func stringToFinalityOverride(
@@ -15,11 +15,11 @@ func stringToFinalityOverride(
 		return data, nil
 	}
 
-	if t != reflect.TypeOf(evmclient.FinalityOverride(0)) {
+	if t != reflect.TypeOf(evm.FinalityOverride(0)) {
 		return data, nil
 	}
 
-	return evmclient.ParseFinalityOverride(data.(string))
+	return evm.ParseFinalityOverride(data.(string))
 }
 
 // AddDecodeHooks adds decode hooks to the given config to correctly translate string into FinalityOverride

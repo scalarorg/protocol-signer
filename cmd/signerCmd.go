@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
-	"github.com/scalarorg/protocol-signer/btcclient"
 	"github.com/scalarorg/protocol-signer/config"
-	m "github.com/scalarorg/protocol-signer/observability/metrics"
-	"github.com/scalarorg/protocol-signer/signerapp"
-	"github.com/scalarorg/protocol-signer/signerservice"
+	signerservice "github.com/scalarorg/protocol-signer/internals/signer"
+	"github.com/scalarorg/protocol-signer/packages/btc"
+	btcclient "github.com/scalarorg/protocol-signer/packages/btc"
 )
 
 func init() {
@@ -24,63 +21,39 @@ var runSignerCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
 		cfg, err := config.GetConfig(configPath)
 		if err != nil {
 			return err
 		}
 
 		parsedConfig, err := cfg.Parse()
-
 		if err != nil {
 			return err
 		}
 
-		parsedGlobalParams, err := signerapp.NewVersionedParamsRetriever(globalParamPath)
+		// btcNode, err := btc.NewBtcClient(parsedConfig.BtcNodeConfig)
+		// if err != nil {
+		// 	return err
+		// }
 
-		if err != nil {
-			return err
-		}
-
-		fullNodeClient, err := btcclient.NewBtcClient(parsedConfig.BtcNodeConfig)
-
-		if err != nil {
-			return err
-		}
-
-		chainInfo := signerapp.NewBitcoindChainInfo(fullNodeClient)
-
-		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
-		// evmClient, err := evmclient.NewEvmClient(parsedConfig.EvmConfigs[0])
+		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcNodeConfig)
 		if err != nil {
 			return err
 		}
 		// TODO: Add options to use customn remote signers
 		// Integrate cubist remote signer
-		signer := signerapp.NewPsbtSigner(signerClient)
-
-		app := signerapp.NewSignerApp(
-			signer,
-			chainInfo,
-			parsedGlobalParams,
-			parsedConfig.BtcNodeConfig.Network,
-		)
-
-		metrics := m.NewCovenantSignerMetrics()
+		signer := btc.NewPsbtSigner(signerClient)
 
 		srv, err := signerservice.New(
 			cmd.Context(),
 			parsedConfig,
-			app,
-			metrics,
+			signer,
 		)
 
 		if err != nil {
 			return err
 		}
-
-		metricsAddress := fmt.Sprintf("%s:%d", cfg.Metrics.Host, cfg.Metrics.Port)
-
-		m.Start(metricsAddress, metrics.Registry)
 
 		// TODO: Add signal handling and gracefull shutdown
 		return srv.Start()

@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/rs/zerolog/log"
-	m "github.com/scalarorg/protocol-signer/observability/metrics"
-	"github.com/scalarorg/protocol-signer/signerservice/handlers"
-	"github.com/scalarorg/protocol-signer/signerservice/middlewares"
-
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 	"github.com/scalarorg/protocol-signer/config"
-	s "github.com/scalarorg/protocol-signer/signerapp"
+	"github.com/scalarorg/protocol-signer/internals/signer/handlers"
+	"github.com/scalarorg/protocol-signer/internals/signer/middlewares"
+	"github.com/scalarorg/protocol-signer/packages/btc"
+	"github.com/scalarorg/protocol-signer/packages/evm"
 )
 
 type SigningServer struct {
@@ -25,12 +24,7 @@ func (a *SigningServer) SetupRoutes(r *chi.Mux) {
 	r.Post("/v1/sign-unbonding-tx", registerHandler(handler.SignUnbonding))
 }
 
-func New(
-	ctx context.Context,
-	cfg *config.ParsedConfig,
-	signer *s.SignerApp,
-	metrics *m.CovenantSignerMetrics,
-) (*SigningServer, error) {
+func New(ctx context.Context, cfg *config.ParsedConfig, btcSigner *btc.PsbtSigner) (*SigningServer, error) {
 	r := chi.NewRouter()
 
 	// TODO: Add middlewares
@@ -50,11 +44,11 @@ func New(
 		Handler:      r,
 	}
 	// Create evm clients
-	evmClients := make([]handlers.ExternalEvmClient, len(cfg.EvmConfigs))
+	evmClients := make([]evm.EvmClient, len(cfg.EvmConfigs))
 	for i, evmConfig := range cfg.EvmConfigs {
-		evmClients[i] = handlers.NewEvmClient(evmConfig)
+		evmClients[i] = *evm.NewEvmClient(evmConfig)
 	}
-	h, err := handlers.NewHandler(ctx, cfg.ServerConfig.AccessToken, evmClients, signer, metrics)
+	h, err := handlers.NewHandler(evmClients, btcSigner)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while setting up handlers")
 	}

@@ -9,24 +9,13 @@
 # will be used to sign psbt's
 [btc-config]
 # Btc node host
-host = "localhost:18556"
+host = "testnet3.btc.scalar.org:80"
 # Btc node user
-user = "user"
+user = "mike"
 # Btc node password
-pass = "pass"
+pass = "apd3g41pkl"
 # Btc network (testnet3|testnet4|mainnet|regtest|simnet|signet)
-network = "regtest"
-
-[btc-signer-config]
-# Btc node host
-host = "localhost:18332"
-# TODO: consider reading user/pass from command line
-# Btc node user
-user = "user"
-# Btc node password
-pass = "pass"
-# Btc network (testnet3|mainnet|regtest|simnet|signet)
-network = "regtest"
+network = "testnet3"
 
 [[evm-config]]
 # Evm chain id
@@ -34,7 +23,7 @@ chain-id = 11155111
 # Evm chain name
 chain-name = "ethereum-sepolia"
 # Evm chain rpc url
-chain-rpc-url = "http://localhost:8545"
+rpc-url = "https://eth-sepolia.g.alchemy.com/v2/nNbspp-yjKP9GtAcdKi8xcLnBTptR2Zx"
 finality-override = "confirmation"
 # Evm chain address
 smart-contract-address = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"    
