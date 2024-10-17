@@ -2,9 +2,6 @@ package btc_test
 
 import (
 	"bytes"
-	"encoding/base64"
-	"encoding/hex"
-	"log"
 	"strings"
 	"testing"
 
@@ -55,14 +52,15 @@ func TestSignPsbt(t *testing.T) {
 		t.Fatalf("Unable to parse Psbt: %v", err)
 	}
 
-	t.Logf(">>> Before: %+v\n", packet.Inputs)
-
 	result, err := btc.SignPsbtAll(packet, privKey)
 	if err != nil {
 		t.Fatalf("Failed to sign PSBT: %v", err)
 	}
 
-	t.Logf(">>> After: %+v\n", packet.Inputs)
+	// t.Logf(">>> After: %+v\n", packet.Inputs[0].TaprootScriptSpendSig)
+	// for i, s := range packet.Inputs[0].TaprootScriptSpendSig {
+	// 	t.Logf(">>> TaprootScriptSpendSig[%d]: %+v\n\n\n", i, s)
+	// }
 
 	if result == nil {
 		t.Fatalf("No result returned from signing")
@@ -73,29 +71,29 @@ func TestSignPsbt(t *testing.T) {
 		t.Fatalf("Failed to finalize PSBT: %v", err)
 	}
 
-	t.Logf(">>> Finalized: %+v\n", packet.Inputs)
+	// t.Logf(">>> Finalized: %+v\n", packet.Inputs)
 
 	finalTx, err := psbt.Extract(packet)
 	if err != nil {
 		t.Fatalf("Failed to extract transaction: %v", err)
 	}
 
-	t.Logf(">>> Extracted: %v\n", finalTx)
+	// t.Logf(">>> Extracted: %v\n", finalTx)
 
-	txHash := finalTx.TxHash()
-	t.Logf(">>> TxHash: %v\n", txHash)
+	// txHash := finalTx.TxHash()
+	// t.Logf(">>> TxHash: %v\n", txHash)
 
 	// Serialize the transaction to raw bytes
 	var buf bytes.Buffer
 	finalTx.Serialize(&buf)
 
 	// Convert to hex
-	hexTx := hex.EncodeToString(buf.Bytes())
-	log.Printf(">>> Transaction Hex: %s\n", hexTx)
+	// hexTx := hex.EncodeToString(buf.Bytes())
+	// log.Printf(">>> Transaction Hex: %s\n", hexTx)
 
-	// Convert to base64
-	base64Tx := base64.StdEncoding.EncodeToString(buf.Bytes())
-	log.Printf(">>> Transaction Base64: %s\n", base64Tx)
+	// // Convert to base64
+	// base64Tx := base64.StdEncoding.EncodeToString(buf.Bytes())
+	// log.Printf(">>> Transaction Base64: %s\n", base64Tx)
 }
 
 // 4 64 112 183 15 112 5 51 122 103 2 190 156 196 163 97 80 43 83 67 64 158 252 252 65 234 34 85 238 172 83 65 171 135 218 187 172 216 110 25 215 159 3 232 113 166 221 121 170 107 249 103 193 197 110 15 54 200 151 200 141 165 35 135 213 207 64 243 214 87 225 251 105 114 184 153 45 249 96 85 210 114 150 254 65 161 133 211 68 134 183 122 230 179 252 216 124 218 49 133 91 122 172 67 11 21 61 189 180 48 55 145 31 204 246 240 16 222 59 24 131 65 220 90 166 170 94 17 178 22 2 190
