@@ -136,25 +136,61 @@ func signSegWitV1ScriptSpend(in *psbt.PInput, tx *wire.MsgTx,
 	sigHashes *txscript.TxSigHashes, idx int, privKey *btcec.PrivateKey,
 	leaf txscript.TapLeaf) error {
 
+	// fmt.Printf(">>>>> [TX] %+v\n", tx)
+	// fmt.Printf("SIG_HASHES %+v\n", sigHashes)
+	// fmt.Println(">>>>> [IDX]", idx)
+	// fmt.Println(">>>>> [in.WitnessUtxo.Value]", in.WitnessUtxo.Value)
+	// fmt.Println(">>>>> [in.WitnessUtxo.PkScript]", in.WitnessUtxo.PkScript)
+	// fmt.Printf(">>>>> [leaf] %+v\n", leaf)
+	// fmt.Println(">>>>> [in.SighashType]", in.SighashType)
+	// fmt.Println(">>>>> [privKey]", privKey)
+
+	// tapLeafHex := hex.EncodeToString(leaf.Script)
+	// fmt.Println(">>>>> [tapLeafHex]", tapLeafHex)
+	// fmt.Println(">>>>> [tapLeafVersion]", leaf.LeafVersion)
+
+	// prevOut.PkScript,
+	// 	prevOut.Value,
+
+	// inputFetcher := txscript.NewCannedPrevOutputFetcher(
+	// 	in.WitnessUtxo.PkScript, in.WitnessUtxo.Value,
+	// )
+	// hType := txscript.SigHashDefault
+	// sigHash, err := txscript.CalcTaprootSignatureHash(sigHashes, hType, tx, idx, inputFetcher)
+	// if err != nil {
+	// 	fmt.Printf("error: %+v\n", err)
+	// 	return err
+	// }
+
+	// sigHashHex := hex.EncodeToString(sigHash)
+	// fmt.Println(">>>>> [sigHashHex]", sigHashHex)
+
+	// fmt.Println("SIG_HASH", sigHash)
+
+	// fmt.Printf("Taproot HashPrevOutsV1: %x\n", sigHashes.TaprootSigHashMidState.HashPrevOutsV1)
+	// fmt.Printf("Taproot HashSequenceV1: %x\n", sigHashes.TaprootSigHashMidState.HashSequenceV1)
+	// fmt.Printf("Taproot HashOutputsV1: %x\n", sigHashes.TaprootSigHashMidState.HashOutputsV1)
+	// fmt.Printf("Taproot HashInputScriptsV1: %x\n", sigHashes.TaprootSigHashMidState.HashInputScriptsV1)
+	// fmt.Printf("Taproot HashInputAmountsV1: %x\n", sigHashes.TaprootSigHashMidState.HashInputAmountsV1)
+
 	rawSig, err := txscript.RawTxInTapscriptSignature(
 		tx, sigHashes, idx, in.WitnessUtxo.Value,
 		in.WitnessUtxo.PkScript, leaf, in.SighashType, privKey,
 	)
+
+	fmt.Println("RAW_SIG", rawSig, "len", len(rawSig))
+
 	if err != nil {
 		return fmt.Errorf("error signing taproot script input %d: %v",
 			idx, err)
 	}
 
-	// Get the 33-byte compressed public key
-	compressedPubKey := privKey.PubKey().SerializeCompressed()
-
-	// Extract the last 32 bytes (the x-coordinate) for the x-only public key
-	xOnlyPubKey := compressedPubKey[1:] // Skip the first byte (prefix)
+	XOnlyPubkey := privKey.PubKey().SerializeCompressed()[1:]
 
 	// toXOnlyPubKey from privKey
 	in.TaprootBip32Derivation = append(
 		in.TaprootBip32Derivation, &psbt.TaprootBip32Derivation{
-			XOnlyPubKey: xOnlyPubKey,
+			XOnlyPubKey: XOnlyPubkey,
 		},
 	)
 
