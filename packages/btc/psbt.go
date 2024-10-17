@@ -3,6 +3,8 @@ package btc
 import (
 	"bytes"
 	"fmt"
+	"math"
+	"sort"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
@@ -111,24 +113,24 @@ func SignPsbtAll(packet *psbt.Packet, privKey *secp256k1.PrivateKey) ([]uint32, 
 
 // signSegWitV1KeySpend attempts to generate a signature for a SegWit version 1
 // (p2tr) input and stores it in the TaprootKeySpendSig field.
-func signSegWitV1KeySpend(in *psbt.PInput, tx *wire.MsgTx,
-	sigHashes *txscript.TxSigHashes, idx int, privKey *btcec.PrivateKey,
-	tapscriptRootHash []byte) error {
+// func signSegWitV1KeySpend(in *psbt.PInput, tx *wire.MsgTx,
+// 	sigHashes *txscript.TxSigHashes, idx int, privKey *btcec.PrivateKey,
+// 	tapscriptRootHash []byte) error {
 
-	rawSig, err := txscript.RawTxInTaprootSignature(
-		tx, sigHashes, idx, in.WitnessUtxo.Value,
-		in.WitnessUtxo.PkScript, tapscriptRootHash, in.SighashType,
-		privKey,
-	)
-	if err != nil {
-		return fmt.Errorf("error signing taproot input %d: %v", idx,
-			err)
-	}
+// 	rawSig, err := txscript.RawTxInTaprootSignature(
+// 		tx, sigHashes, idx, in.WitnessUtxo.Value,
+// 		in.WitnessUtxo.PkScript, tapscriptRootHash, in.SighashType,
+// 		privKey,
+// 	)
+// 	if err != nil {
+// 		return fmt.Errorf("error signing taproot input %d: %v", idx,
+// 			err)
+// 	}
 
-	in.TaprootKeySpendSig = rawSig
+// 	in.TaprootKeySpendSig = rawSig
 
-	return nil
-}
+// 	return nil
+// }
 
 // signSegWitV1ScriptSpend attempts to generate a signature for a SegWit version
 // 1 (p2tr) input and stores it in the TaprootScriptSpendSig field.
@@ -136,69 +138,39 @@ func signSegWitV1ScriptSpend(in *psbt.PInput, tx *wire.MsgTx,
 	sigHashes *txscript.TxSigHashes, idx int, privKey *btcec.PrivateKey,
 	leaf txscript.TapLeaf) error {
 
-	// fmt.Printf(">>>>> [TX] %+v\n", tx)
-	// fmt.Printf("SIG_HASHES %+v\n", sigHashes)
-	// fmt.Println(">>>>> [IDX]", idx)
-	// fmt.Println(">>>>> [in.WitnessUtxo.Value]", in.WitnessUtxo.Value)
-	// fmt.Println(">>>>> [in.WitnessUtxo.PkScript]", in.WitnessUtxo.PkScript)
-	// fmt.Printf(">>>>> [leaf] %+v\n", leaf)
-	// fmt.Println(">>>>> [in.SighashType]", in.SighashType)
-	// fmt.Println(">>>>> [privKey]", privKey)
-
-	// tapLeafHex := hex.EncodeToString(leaf.Script)
-	// fmt.Println(">>>>> [tapLeafHex]", tapLeafHex)
-	// fmt.Println(">>>>> [tapLeafVersion]", leaf.LeafVersion)
-
-	// prevOut.PkScript,
-	// 	prevOut.Value,
-
-	// inputFetcher := txscript.NewCannedPrevOutputFetcher(
-	// 	in.WitnessUtxo.PkScript, in.WitnessUtxo.Value,
-	// )
-	// hType := txscript.SigHashDefault
-	// sigHash, err := txscript.CalcTaprootSignatureHash(sigHashes, hType, tx, idx, inputFetcher)
-	// if err != nil {
-	// 	fmt.Printf("error: %+v\n", err)
-	// 	return err
-	// }
-
-	// sigHashHex := hex.EncodeToString(sigHash)
-	// fmt.Println(">>>>> [sigHashHex]", sigHashHex)
-
-	// fmt.Println("SIG_HASH", sigHash)
-
-	// fmt.Printf("Taproot HashPrevOutsV1: %x\n", sigHashes.TaprootSigHashMidState.HashPrevOutsV1)
-	// fmt.Printf("Taproot HashSequenceV1: %x\n", sigHashes.TaprootSigHashMidState.HashSequenceV1)
-	// fmt.Printf("Taproot HashOutputsV1: %x\n", sigHashes.TaprootSigHashMidState.HashOutputsV1)
-	// fmt.Printf("Taproot HashInputScriptsV1: %x\n", sigHashes.TaprootSigHashMidState.HashInputScriptsV1)
-	// fmt.Printf("Taproot HashInputAmountsV1: %x\n", sigHashes.TaprootSigHashMidState.HashInputAmountsV1)
-
-	rawSig, err := txscript.RawTxInTapscriptSignature(
-		tx, sigHashes, idx, in.WitnessUtxo.Value,
-		in.WitnessUtxo.PkScript, leaf, in.SighashType, privKey,
+	inputFetcher := txscript.NewCannedPrevOutputFetcher(
+		in.WitnessUtxo.PkScript, in.WitnessUtxo.Value,
 	)
+	hType := txscript.SigHashDefault
 
-	fmt.Println("RAW_SIG", rawSig, "len", len(rawSig))
+	tapLeafHash := leaf.TapHash()
 
+	sigHash, err := txscript.CalcTapscriptSignaturehash(sigHashes, hType, tx, idx, inputFetcher, leaf, txscript.WithBaseTapscriptVersion(math.MaxUint32, tapLeafHash[:]))
 	if err != nil {
-		return fmt.Errorf("error signing taproot script input %d: %v",
-			idx, err)
+		return err
+	}
+
+	zeroBytes := [32]byte{}
+	signature, err := schnorr.Sign(privKey, sigHash, schnorr.CustomNonce(zeroBytes))
+	if err != nil {
+		return err
+	}
+
+	rawSig := signature.Serialize()
+
+	// Finally, append the sighash type to the final sig if it's not the
+	// default sighash value (in which case appending it is disallowed).
+	if hType != txscript.SigHashDefault {
+		rawSig = append(rawSig, byte(hType))
 	}
 
 	XOnlyPubkey := privKey.PubKey().SerializeCompressed()[1:]
-
-	// toXOnlyPubKey from privKey
-	in.TaprootBip32Derivation = append(
-		in.TaprootBip32Derivation, &psbt.TaprootBip32Derivation{
-			XOnlyPubKey: XOnlyPubkey,
-		},
-	)
 
 	leafHash := leaf.TapHash()
 
 	in.TaprootScriptSpendSig = append(
 		in.TaprootScriptSpendSig, &psbt.TaprootScriptSpendSig{
-			XOnlyPubKey: in.TaprootBip32Derivation[0].XOnlyPubKey,
+			XOnlyPubKey: XOnlyPubkey,
 			LeafHash:    leafHash[:],
 			// We snip off the sighash flag from the end (if it was
 			// specified in the first place.)
@@ -210,6 +182,24 @@ func signSegWitV1ScriptSpend(in *psbt.PInput, tx *wire.MsgTx,
 	return nil
 }
 
-// 020000000001015ad096e8fbceb648fd1278877a57298e5441c91bde19b523b87eaf0a94557c090000000000fdffffff01722600000000000016001450dceca158a9c872eb405d52293d351110572c9e0440f3d657e1fb6972b8992df96055d27296fe41a185d34486b77ae6b3fcd87cda31855b7aac430b153dbdb43037911fccf6f010de3b188341dc5aa6aa5e11b2debe40c5bcf4a18cca8651d24ce8ad70c6b4a60dca874a0cae01b4165769556a411dff7dad8bb7e637cadaa9be1477b7b69e799bd1f7b7aab85add3d5b6e69be22ab5444202ae31ea8709aeda8194ba3e2f7e7e95e680e8b65135c8983c0a298d17bc5350aad20cf5dff57a173c5ac8323c4baca3fff0728eb716f39f0e5a60312320cd2935b0cac61c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0788050e79d530637b2bf963ec79e739ea478978b77b362649439e20045cdcb566ee53347bcebe6c4c52f0b194b8ac3a58febe0d1ac65227c7b4b1420ee4911cc00000000
+func FinalizePsbt(packet *psbt.Packet, signedInputs []uint32) error {
+	for idx := range signedInputs {
+		input := &packet.Inputs[idx]
+		sortTaprootSigsByPubKey(input)
+		success, err := psbt.MaybeFinalize(packet, idx)
+		if err != nil {
+			return err
+		}
+		if !success {
+			return fmt.Errorf("failed to finalize PSBT")
+		}
+	}
+	return nil
+}
 
-// 020000000001015ad096e8fbceb648fd1278877a57298e5441c91bde19b523b87eaf0a94557c090000000000fdffffff01722600000000000016001450dceca158a9c872eb405d52293d351110572c9e0440f3d657e1fb6972b8992df96055d27296fe41a185d34486b77ae6b3fcd87cda31855b7aac430b153dbdb43037911fccf6f010de3b188341dc5aa6aa5e11b2debe40c5bcf4a18cca8651d24ce8ad70c6b4a60dca874a0cae01b4165769556a411dff7dad8bb7e637cadaa9be1477b7b69e799bd1f7b7aab85add3d5b6e69be22ab5444202ae31ea8709aeda8194ba3e2f7e7e95e680e8b65135c8983c0a298d17bc5350aad20cf5dff57a173c5ac8323c4baca3fff0728eb716f39f0e5a60312320cd2935b0cac61c150929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0788050e79d530637b2bf963ec79e739ea478978b77b362649439e20045cdcb566ee53347bcebe6c4c52f0b194b8ac3a58febe0d1ac65227c7b4b1420ee4911cc00000000
+func sortTaprootSigsByPubKey(input *psbt.PInput) {
+	sort.Slice(input.TaprootScriptSpendSig, func(i, j int) bool {
+		return bytes.Compare(input.TaprootScriptSpendSig[i].XOnlyPubKey[:],
+			input.TaprootScriptSpendSig[j].XOnlyPubKey[:]) < 0
+	})
+}
