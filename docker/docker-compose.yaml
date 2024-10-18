@@ -29,6 +29,8 @@ services:
       context: ../
       dockerfile: docker/Dockerfile
     image: "scalarorg/protocol-signer:latest"
+    ports:
+      - "9791:9791"
     volumes:
       - ../example/config.toml:/home/protocol-signer/.signer/config.toml:Z
     # entrypoint: sleep infinity
