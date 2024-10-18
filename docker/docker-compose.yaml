@@ -3,8 +3,8 @@ services:
     image: lncm/bitcoind:v26.1
     container_name: bitcoind
     volumes:
-      - ./.bitcoin:/data/.bitcoin
-      - ./example/bitcoin.conf:/data/.bitcoin/bitcoin.conf
+      - ./.bitcoin:/data/env:Z
+      - ../example/bitcoin.${NETWORK:-testnet}.conf:/data/.bitcoin/bitcoin.conf
       - ./run.sh:/run.sh
     env_file:
       - .env
@@ -28,16 +28,15 @@ services:
   protocol-signer:
     container_name: protocol-signer
     build: 
-      context: ./
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/Dockerfile
     image: "scalarorg/protocol-signer:latest"
     env_file:
       - .env
     volumes:
-      - ./example/config.toml:/home/protocol-signer/.signer/config.toml:Z
-      - ./example/global-params.json:/home/protocol-signer/.signer/global-params.json:Z
+      - ../example/config.toml:/home/protocol-signer/.signer/config.toml:Z
     # entrypoint: sleep infinity
     entrypoint: ["protocol-signer", "start"]  
-    command: ["--config", "/home/protocol-signer/.signer/config.toml", "--params","/home/protocol-signer/.signer/global-params.json"]
+    command: ["--config", "/home/protocol-signer/.signer/config.toml"]
 
 

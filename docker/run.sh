@@ -18,20 +18,25 @@ start_bitcoind() {
 }
 createwallet() {
    bitcoin-cli -named createwallet \
-        wallet_name=${WALLET_NAME:-covenant} \
-        passphrase=${WALLET_PASSPHRASE:-covenant} \
+        wallet_name=${WALLET_NAME:-protocol} \
+        passphrase=${WALLET_PASSPHRASE:-protocol} \
         load_on_startup=true \
         descriptors=false # create legacy wallet
 }
 getnewaddress() {
     BTC_ADDRESS=$(bitcoin-cli getnewaddress)
-    echo $BTC_ADDRESS>$DATADIR/address.txt
-    bitcoin-cli walletpassphrase ${WALLET_PASSPHRASE:-covenant} 60
-    bitcoin-cli getaddressinfo $BTC_ADDRESS>$DATADIR/addressinfo.txt
-    bitcoin-cli dumpprivkey $BTC_ADDRESS>$DATADIR/privkey.txt
+    OUT_DIR=${DATADIR:-/data/env}
+    bitcoin-cli walletpassphrase ${WALLET_PASSPHRASE:-protocol} 60
+    if [ -f $OUT_DIR/addressinfo.txt ]; then
+        echo "addressinfo.txt already exists"
+        echo $OUT_DIR/addressinfo.txt
+    else
+        bitcoin-cli getaddressinfo $BTC_ADDRESS>$OUT_DIR/addressinfo.txt
+        bitcoin-cli dumpprivkey $BTC_ADDRESS>$OUT_DIR/privkey.txt
+    fi
 }
 entrypoint() {
-    bitcoind
+    bitcoind $@
     while ! nc -z 127.0.0.1 18332; do
         sleep 1
     done

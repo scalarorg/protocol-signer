@@ -22,6 +22,8 @@ go.work
 go.work.sum
 # Binary file
 protocol-signer
+# runtime data
+.bitcoin
 # env file
 .env
 .DS_Store   // macOS system file
