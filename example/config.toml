@@ -17,6 +17,22 @@ pass = "apd3g41pkl"
 # Btc network (testnet3|testnet4|mainnet|regtest|simnet|signet)
 network = "testnet3"
 
+[btc-signer-config]
+# Btc node host
+host = "testnet3.btc.scalar.org:80"
+
+# Btc node user
+user = "mike"
+
+# Btc node password
+pass = "apd3g41pkl"
+
+network = "testnet3"
+
+address = "tb1pmepr6zmmawhqdwxdflsacnske6jkzq0acjhkq44vl2uupjy2e39quax62u"
+
+passphrase = "passphrase"
+
 [[evm-config]]
 # Evm chain id
 chain-id = 11155111
@@ -47,7 +63,7 @@ idle-timeout = 120
 # Max content length in bytes
 max-content-length = 8192
 # 
-access-token = ""
+access-token = "token"
 [metrics]
 # The prometheus server host
 host = "127.0.0.1"

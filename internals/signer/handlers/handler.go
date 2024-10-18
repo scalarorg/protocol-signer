@@ -9,8 +9,10 @@ import (
 )
 
 type Handler struct {
-	evms   []evm.EvmClient
-	signer *btc.PsbtSigner
+	evms        []evm.EvmClient
+	signer      *btc.PsbtSigner
+	broadcaster *btc.BtcClient
+	token       string
 }
 
 type Result struct {
@@ -27,10 +29,28 @@ func NewResult[T any](data T) *Result {
 	return &Result{Data: res, Status: http.StatusOK}
 }
 
-func NewHandler(evms []evm.EvmClient, s *btc.PsbtSigner) (*Handler, error) {
+func NewHandler(evms []evm.EvmClient, s *btc.PsbtSigner, b *btc.BtcClient, t string) (*Handler, error) {
+	if len(evms) == 0 {
+		return nil, fmt.Errorf("no evm clients provided")
+	}
+
+	if s == nil {
+		return nil, fmt.Errorf("no btc signer provided")
+	}
+
+	if b == nil {
+		return nil, fmt.Errorf("no btc broadcaster provided")
+	}
+
+	if t == "" {
+		return nil, fmt.Errorf("no access token provided")
+	}
+
 	return &Handler{
-		evms:   evms,
-		signer: s,
+		evms:        evms,
+		signer:      s,
+		broadcaster: b,
+		token:       t,
 	}, nil
 }
 

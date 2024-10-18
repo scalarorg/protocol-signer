@@ -14,30 +14,38 @@ import (
 
 type Config struct {
 	// TODO: Separate config for signing node and for full node
-	BtcNodeConfig BtcConfig       `mapstructure:"btc-config"`
-	EvmConfigs    []evm.EvmConfig `mapstructure:"evm-config"`
-	Server        ServerConfig    `mapstructure:"server-config"`
-	Metrics       MetricsConfig   `mapstructure:"metrics"`
+	BtcNodeConfig   BtcConfig       `mapstructure:"btc-config"`
+	BtcSignerConfig BtcConfig       `mapstructure:"btc-signer-config"`
+	EvmConfigs      []evm.EvmConfig `mapstructure:"evm-config"`
+	Server          ServerConfig    `mapstructure:"server-config"`
+	Metrics         MetricsConfig   `mapstructure:"metrics"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		BtcNodeConfig: *DefaultBtcConfig(),
-		EvmConfigs:    []evm.EvmConfig{*evm.DefaultEvmConfig()},
-		Server:        *DefaultServerConfig(),
-		Metrics:       *DefaultMetricsConfig(),
+		BtcNodeConfig:   *DefaultBtcConfig(),
+		BtcSignerConfig: *DefaultBtcConfig(),
+		EvmConfigs:      []evm.EvmConfig{*evm.DefaultEvmConfig()},
+		Server:          *DefaultServerConfig(),
+		Metrics:         *DefaultMetricsConfig(),
 	}
 }
 
 type ParsedConfig struct {
-	BtcNodeConfig *ParsedBtcConfig
-	EvmConfigs    []evm.EvmConfig
-	ServerConfig  *ParsedServerConfig
-	MetricsConfig *ParsedMetricsConfig
+	BtcNodeConfig   *ParsedBtcConfig
+	BtcSignerConfig *ParsedBtcConfig
+	EvmConfigs      []evm.EvmConfig
+	ServerConfig    *ParsedServerConfig
+	MetricsConfig   *ParsedMetricsConfig
 }
 
 func (cfg *Config) Parse() (*ParsedConfig, error) {
 	btcConfig, err := cfg.BtcNodeConfig.Parse()
+	if err != nil {
+		return nil, err
+	}
+
+	btcSignerConfig, err := cfg.BtcSignerConfig.Parse()
 	if err != nil {
 		return nil, err
 	}
@@ -53,10 +61,11 @@ func (cfg *Config) Parse() (*ParsedConfig, error) {
 	}
 
 	return &ParsedConfig{
-		BtcNodeConfig: btcConfig,
-		EvmConfigs:    cfg.EvmConfigs,
-		ServerConfig:  serverConfig,
-		MetricsConfig: metricsConfig,
+		BtcNodeConfig:   btcConfig,
+		BtcSignerConfig: btcSignerConfig,
+		EvmConfigs:      cfg.EvmConfigs,
+		ServerConfig:    serverConfig,
+		MetricsConfig:   metricsConfig,
 	}, nil
 }
 

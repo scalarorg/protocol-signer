@@ -7,25 +7,31 @@ import (
 )
 
 type BtcConfig struct {
-	Host    string `mapstructure:"host"`
-	User    string `mapstructure:"user"`
-	Pass    string `mapstructure:"pass"`
-	Network string `mapstructure:"network"`
+	Host       string `mapstructure:"host"`
+	User       string `mapstructure:"user"`
+	Pass       string `mapstructure:"pass"`
+	Network    string `mapstructure:"network"`
+	Address    string `mapstructure:"address"`
+	Passphrase string `mapstructure:"passphrase"`
 }
 
 type ParsedBtcConfig struct {
-	Host    string
-	User    string
-	Pass    string
-	Network *chaincfg.Params
+	Host       string
+	User       string
+	Pass       string
+	Network    *chaincfg.Params
+	Address    string
+	Passphrase string
 }
 
 func DefaultBtcConfig() *BtcConfig {
 	return &BtcConfig{
-		Host:    "localhost:18556",
-		User:    "user",
-		Pass:    "pass",
-		Network: "regtest",
+		Host:       "localhost:18556",
+		User:       "user",
+		Pass:       "pass",
+		Network:    "regtest",
+		Address:    "",
+		Passphrase: "",
 	}
 }
 
@@ -36,10 +42,12 @@ func (c *BtcConfig) Parse() (*ParsedBtcConfig, error) {
 		return nil, err
 	}
 	return &ParsedBtcConfig{
-		Host:    c.Host,
-		User:    c.User,
-		Pass:    c.Pass,
-		Network: params,
+		Host:       c.Host,
+		User:       c.User,
+		Pass:       c.Pass,
+		Network:    params,
+		Address:    c.Address,
+		Passphrase: c.Passphrase,
 	}, nil
 }
 

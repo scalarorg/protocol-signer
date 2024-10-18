@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/btcutil/psbt"
@@ -18,9 +19,9 @@ var signerClient *btc.BtcClient
 
 func TestMain(m *testing.M) {
 	c, err := btc.NewBtcClient(&config.ParsedBtcConfig{
-		Host:    "testnet3.btc.scalar.org:80",
-		User:    "mike",
-		Pass:    "apd3g41pkl",
+		Host:    "192.168.1.34:18332",
+		User:    "user",
+		Pass:    "password",
 		Network: &chaincfg.TestNet3Params,
 	})
 
@@ -30,7 +31,7 @@ func TestMain(m *testing.M) {
 
 	signerClient = c
 
-	// signerClient.UnlockWallet(60, "passphrase")
+	signerClient.UnlockWallet(60, "passphrase")
 
 	m.Run()
 }
@@ -38,16 +39,21 @@ func TestMain(m *testing.M) {
 // go test -run ^TestSignPsbt$ github.com/scalarorg/protocol-signer/packages/btc -v -count=1
 
 func TestSignPsbt(t *testing.T) {
-	wifKey := "cU5n3yJpmFjEc7oDAE8ceF3Xr6Gknhg7JnJ8XABcoSYFttfwwoob"
+	btcAddressString := "bcrt1qp0pyg95qusxrvqn2vggjz926u0gvxk8psuwpw6"
 
-	wif, err := btcutil.DecodeWIF(wifKey)
+	btcAddress, err := btcutil.DecodeAddress(btcAddressString, &chaincfg.RegressionNetParams)
 	if err != nil {
-		t.Fatalf("Failed to decode WIF: %v", err)
+		t.Fatalf("Failed to decode address: %v", err)
 	}
 
-	privKey := wif.PrivKey
+	privKey, err := signerClient.DumpPrivateKey(btcAddress)
+	if err != nil {
+		t.Fatalf("Failed to dump private key: %v", err)
+	}
 
-	stakerPsbt := "cHNidP8BAFICAAAAAX6WwhSPsG0P3RAx5xkdyDWJlkYnN8Bfj0I1+5RamcYDAAAAAAD9////Adi9AAAAAAAAFgAUN5/Vi2cSjSWviTHiiHPNBhTOxDUAAAAAAAEBK4A4AQAAAAAAIlEgg8ldB/Oq2r58Txahcvukuw/cv/fFmrQQkgSY4uUBdr1BFP3Uoq41F+2m2tGmjm9ZyeelRV9bSx80dYaA0FKPNhPcF5d5DZaJDtibdN+87atu1GbbBvxj5kgBue9X4xx1rS5AwjqZRntI2P0WpqT5J+HVV+Fo6hBZ6Gv8MMHQyqfNSiQB+Zc8CLY62HW96ex3jtZX9Zicb9Kytd3QEloUVjgATGIVwVCSm3TBoElUt4tLYDXpel4HiloPKOyW1Ue/7prOgDrAPu8mVK0CpF3NA1w0ywWJmEbtIwnBNVFh4KTgYZ9lA8z1x6NlDe6V7Dej0LxpwcCSXOrYRIpOnuhwZQKLoZQkPUUg/dSirjUX7aba0aaOb1nJ56VFX1tLHzR1hoDQUo82E9ytILmYDQKMuOD7t4mD+hfxHzMVJrxwgNWAa3am3/F2mshmrMAAAA=="
+	fmt.Println("privKey", privKey)
+
+	stakerPsbt := "cHNidP8BAFICAAAAAfplYlPYiWq48xv17k+OjtsWPWOJ2t1Iwv9RMlpBOSSYAAAAAAD9////Adi9AAAAAAAAFgAUmZG33OeZPn7n2tGSGWLWM2jk2ywAAAAAAAEBK4A4AQAAAAAAIlEgZoZJC6/8BXk60MZskWty6TNnjVmiQmIf4Higz2oTwLxBFE2u4mlM/5UIwIvQi7E9BvJ82TRF2eUzBgjd0HLFOZdpyZwNkOxbWoGdiVt2TnXUBrJA/oLeJ9lEgzqUyEQQ/9ZANKTY4jop4juxWM0Hm4vt2yMzgha8UnjIWsp+txlEbL+QC64Cegzedo92/YLf2xtnFQJZrpz8g/1oOxwY+bKzuWIVwVCSm3TBoElUt4tLYDXpel4HiloPKOyW1Ue/7prOgDrA8bHBS6OxMxFOaySwPemFsAipfLUVGN+1L5k4xErTLtVlsDbZjCe3tS9xwW+YzniA+XD7CDZJaOPE5ZxucesTIEUgTa7iaUz/lQjAi9CLsT0G8nzZNEXZ5TMGCN3QcsU5l2mtIBC+QfJMDdXQjFhk6kCYegEgCgTq56IKOxkia2W6PMDerMAAAA=="
 
 	packet, err := psbt.NewFromRawBytes(strings.NewReader(stakerPsbt), true)
 	if err != nil {
@@ -77,5 +83,16 @@ func TestSignPsbt(t *testing.T) {
 	var buf bytes.Buffer
 	finalTx.Serialize(&buf)
 
-	fmt.Println("finalTx", hex.EncodeToString(buf.Bytes()))
+	txHex := hex.EncodeToString(buf.Bytes())
+	fmt.Println("txHex", txHex)
+
+	// Broadcast the transaction
+
+	txid, err := signerClient.RpcClient.SendRawTransaction(finalTx, false)
+	if err != nil {
+		t.Fatalf("Failed to broadcast transaction: %v", err)
+	}
+
+	time.Sleep(5 * time.Second)
+	fmt.Println("txid", txid)
 }
