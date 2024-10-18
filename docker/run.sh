@@ -25,7 +25,7 @@ createwallet() {
 }
 getnewaddress() {
     BTC_ADDRESS=$(bitcoin-cli getnewaddress)
-    OUT_DIR=${DATADIR:-/data/env}
+    OUT_DIR=${DATADIR:-/data}
     bitcoin-cli walletpassphrase ${WALLET_PASSPHRASE:-protocol} 60
     if [ -f $OUT_DIR/addressinfo.txt ]; then
         echo "addressinfo.txt already exists"
