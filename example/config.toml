@@ -46,7 +46,7 @@ smart-contract-address = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae78
 
 [server-config]
 # The address to listen on
-host = "127.0.0.1"
+host = "0.0.0.0"
 
 # The port to listen on
 port = 9791
@@ -66,6 +66,6 @@ max-content-length = 8192
 access-token = "token"
 [metrics]
 # The prometheus server host
-host = "127.0.0.1"
+host = "0.0.0.0"
 # The prometheus server port
 port = 2112
