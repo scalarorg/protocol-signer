@@ -32,23 +32,24 @@ var runSignerCmd = &cobra.Command{
 			return err
 		}
 
-		// btcNode, err := btc.NewBtcClient(parsedConfig.BtcNodeConfig)
-		// if err != nil {
-		// 	return err
-		// }
+		broadcaster, err := btc.NewBtcClient(parsedConfig.BtcNodeConfig)
+		if err != nil {
+			return err
+		}
 
-		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcNodeConfig)
+		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig.ParsedBtcConfig)
 		if err != nil {
 			return err
 		}
 		// TODO: Add options to use customn remote signers
 		// Integrate cubist remote signer
-		signer := btc.NewPsbtSigner(signerClient)
+		signer := btc.NewPsbtSigner(signerClient, parsedConfig.BtcSignerConfig.Address, parsedConfig.BtcSignerConfig.Passphrase)
 
 		srv, err := signerservice.New(
 			cmd.Context(),
 			parsedConfig,
 			signer,
+			broadcaster,
 		)
 
 		if err != nil {

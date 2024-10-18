@@ -24,7 +24,7 @@ func (a *SigningServer) SetupRoutes(r *chi.Mux) {
 	r.Post("/v1/sign-unbonding-tx", registerHandler(handler.SignUnbonding))
 }
 
-func New(ctx context.Context, cfg *config.ParsedConfig, btcSigner *btc.PsbtSigner) (*SigningServer, error) {
+func New(ctx context.Context, cfg *config.ParsedConfig, btcSigner *btc.PsbtSigner, broadcaster *btc.BtcClient) (*SigningServer, error) {
 	r := chi.NewRouter()
 
 	// TODO: Add middlewares
@@ -48,7 +48,7 @@ func New(ctx context.Context, cfg *config.ParsedConfig, btcSigner *btc.PsbtSigne
 	for i, evmConfig := range cfg.EvmConfigs {
 		evmClients[i] = *evm.NewEvmClient(evmConfig)
 	}
-	h, err := handlers.NewHandler(evmClients, btcSigner)
+	h, err := handlers.NewHandler(evmClients, btcSigner, broadcaster)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while setting up handlers")
 	}

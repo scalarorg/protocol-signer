@@ -9,8 +9,9 @@ import (
 )
 
 type Handler struct {
-	evms   []evm.EvmClient
-	signer *btc.PsbtSigner
+	evms        []evm.EvmClient
+	signer      *btc.PsbtSigner
+	broadcaster *btc.BtcClient
 }
 
 type Result struct {
@@ -27,10 +28,11 @@ func NewResult[T any](data T) *Result {
 	return &Result{Data: res, Status: http.StatusOK}
 }
 
-func NewHandler(evms []evm.EvmClient, s *btc.PsbtSigner) (*Handler, error) {
+func NewHandler(evms []evm.EvmClient, s *btc.PsbtSigner, b *btc.BtcClient) (*Handler, error) {
 	return &Handler{
-		evms:   evms,
-		signer: s,
+		evms:        evms,
+		signer:      s,
+		broadcaster: b,
 	}, nil
 }
 

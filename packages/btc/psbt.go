@@ -13,56 +13,37 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcwallet/wallet"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
-	"github.com/scalarorg/protocol-signer/packages/types"
 )
 
-func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*types.SigningResult, error) {
+func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 	//TODO: fix hardcode
-	err := s.client.UnlockWallet(60, "passphrase")
+	err := s.client.UnlockWallet(60, s.passphrase)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unlock wallet: %w", err)
 	}
 
-	// psbtEncoded, err := psbtPacket.B64Encode()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// {
-	// 	result = ""
-
-	// 	decodedBytes, err := base64.StdEncoding.DecodeString(result.Psbt)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-
-	decodedBytes := []byte{}
-
-	signedPacket, err := psbt.NewFromRawBytes(bytes.NewReader(decodedBytes), false)
+	privKey, err := s.client.DumpPrivateKey(s.address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to dump private key: %w", err)
 	}
 
-	if len(signedPacket.Inputs[0].TaprootScriptSpendSig) == 0 {
-		// this can happen if btcwallet does not maintain the private key for the
-		// for the public in signing request
-		return nil, fmt.Errorf("no signature found in PSBT packet. Wallet does not maintain covenant public key")
+	signedInputs, err := SignPsbtAll(psbtPacket, privKey)
+	if err != nil || signedInputs == nil {
+		return nil, fmt.Errorf("failed to sign PSBT: %w", err)
 	}
 
-	schnorSignature := signedPacket.Inputs[0].TaprootScriptSpendSig[0].Signature
-
-	parsedSignature, err := schnorr.ParseSignature(schnorSignature)
+	// Proceed with finalization
+	err = FinalizePsbt(psbtPacket, signedInputs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse schnorr signature in psbt packet: %w", err)
-
+		return nil, fmt.Errorf("failed to finalize PSBT: %w", err)
 	}
 
-	result := &types.SigningResult{
-		Signature: parsedSignature,
+	finalTx, err := psbt.Extract(psbtPacket)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract transaction: %w", err)
 	}
 
-	return result, nil
+	return finalTx, nil
 }
 
 // Ref: https://github.com/lightningnetwork/lnd/blob/4da26fb65a669fbee68fa36e60259a8da8ef6d3b/lnwallet/btcwallet/psbt.go#L132

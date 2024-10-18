@@ -62,25 +62,30 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 			fmt.Sprintf("Error checking unbonding tx: %s", err.Error()))
 	}
 
-	psbtPacket, err := psbt.NewFromRawBytes(strings.NewReader(payload.UnbondingPsbt), true)
+	packet, err := psbt.NewFromRawBytes(strings.NewReader(payload.UnbondingPsbt), true)
 	if err != nil {
-		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "invalid psbt packet")
+		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Unable to parse Psbt")
 	}
 
-	encoded, _ := psbtPacket.B64Encode()
-
-	fmt.Println("Encoded: ", encoded)
-
-	result, err := h.signer.SignPsbt(psbtPacket)
+	finalTx, err := h.signer.SignPsbt(packet)
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
+	}
+
+	txid, err := h.broadcaster.RpcClient.SendRawTransaction(finalTx, false)
+	if err != nil {
+		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
+	}
+
+	result := &types.SignAndBroadcastPsbtReponse{
+		TxID: txid,
 	}
 
 	return NewResult(result), nil
 }
 
 // verifyAccessToken checks if the provided access token is valid
-func (h *Handler) verifyAccessToken(token string) bool {
+func (h *Handler) verifyAccessToken(_token string) bool {
 	// Implement your token verification logic here
 	// This could involve checking against a database, calling an authentication service, etc.
 	// For this example, we'll just check if the token is not empty

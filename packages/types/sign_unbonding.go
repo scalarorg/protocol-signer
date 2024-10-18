@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 // SignUnbondingTxPayload carries all data necessary to sign unbonding transaction
@@ -13,8 +14,8 @@ type SignUnbondingTxRequest struct {
 }
 
 // SignUnbondingTxResponse covenant member schnorr signature
-type SignUnbondingTxResponse struct {
-	SignatureHex string `json:"signature_hex"`
+type SignAndBroadcastPsbtReponse struct {
+	TxID *chainhash.Hash `json:"tx_id"`
 }
 
 type SigningResult struct {

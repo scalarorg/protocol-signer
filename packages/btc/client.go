@@ -53,13 +53,30 @@ type BtcClient struct {
 }
 
 type PsbtSigner struct {
-	client *BtcClient
+	client     *BtcClient
+	address    btcutil.Address
+	passphrase string
 }
 
-func NewPsbtSigner(client *BtcClient) *PsbtSigner {
-	return &PsbtSigner{
-		client: client,
+func NewPsbtSigner(client *BtcClient, address string, passphrase string) *PsbtSigner {
+	btcAddress, err := client.RpcClient.GetNewAddress(address)
+	if err != nil {
+		panic(err)
 	}
+
+	if passphrase == "" {
+		panic("passphrase is required")
+	}
+
+	return &PsbtSigner{
+		client:     client,
+		address:    btcAddress,
+		passphrase: passphrase,
+	}
+}
+
+func (s *PsbtSigner) GetClient() *BtcClient {
+	return s.client
 }
 
 func btcConfigToConnConfig(cfg *config.ParsedBtcConfig) *rpcclient.ConnConfig {
