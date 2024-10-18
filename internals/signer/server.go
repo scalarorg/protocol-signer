@@ -48,7 +48,7 @@ func New(ctx context.Context, cfg *config.ParsedConfig, btcSigner *btc.PsbtSigne
 	for i, evmConfig := range cfg.EvmConfigs {
 		evmClients[i] = *evm.NewEvmClient(evmConfig)
 	}
-	h, err := handlers.NewHandler(evmClients, btcSigner, broadcaster)
+	h, err := handlers.NewHandler(evmClients, btcSigner, broadcaster, cfg.ServerConfig.AccessToken)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while setting up handlers")
 	}

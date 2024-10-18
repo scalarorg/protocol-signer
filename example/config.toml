@@ -63,7 +63,7 @@ idle-timeout = 120
 # Max content length in bytes
 max-content-length = 8192
 # 
-access-token = ""
+access-token = "token"
 [metrics]
 # The prometheus server host
 host = "127.0.0.1"

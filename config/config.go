@@ -15,7 +15,7 @@ import (
 type Config struct {
 	// TODO: Separate config for signing node and for full node
 	BtcNodeConfig   BtcConfig       `mapstructure:"btc-config"`
-	BtcSignerConfig BtcSignerConfig `mapstructure:"btc-signer-config"`
+	BtcSignerConfig BtcConfig       `mapstructure:"btc-signer-config"`
 	EvmConfigs      []evm.EvmConfig `mapstructure:"evm-config"`
 	Server          ServerConfig    `mapstructure:"server-config"`
 	Metrics         MetricsConfig   `mapstructure:"metrics"`
@@ -24,7 +24,7 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		BtcNodeConfig:   *DefaultBtcConfig(),
-		BtcSignerConfig: *DefaultBtcSignerConfig(),
+		BtcSignerConfig: *DefaultBtcConfig(),
 		EvmConfigs:      []evm.EvmConfig{*evm.DefaultEvmConfig()},
 		Server:          *DefaultServerConfig(),
 		Metrics:         *DefaultMetricsConfig(),
@@ -33,7 +33,7 @@ func DefaultConfig() *Config {
 
 type ParsedConfig struct {
 	BtcNodeConfig   *ParsedBtcConfig
-	BtcSignerConfig *ParsedBtcSignerConfig
+	BtcSignerConfig *ParsedBtcConfig
 	EvmConfigs      []evm.EvmConfig
 	ServerConfig    *ParsedServerConfig
 	MetricsConfig   *ParsedMetricsConfig

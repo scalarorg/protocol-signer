@@ -37,7 +37,7 @@ var runSignerCmd = &cobra.Command{
 			return err
 		}
 
-		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig.ParsedBtcConfig)
+		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
 		if err != nil {
 			return err
 		}

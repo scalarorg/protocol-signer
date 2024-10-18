@@ -1,26 +1,15 @@
 package handlers
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil/psbt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/scalarorg/protocol-signer/packages/types"
 )
-
-func parseSchnorrSigFromHex(hexStr string) (*schnorr.Signature, error) {
-	sigBytes, err := hex.DecodeString(hexStr)
-	if err != nil {
-		return nil, err
-	}
-
-	return schnorr.ParseSignature(sigBytes)
-}
 
 func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 	// Check Authorization header
@@ -85,10 +74,9 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 }
 
 // verifyAccessToken checks if the provided access token is valid
-func (h *Handler) verifyAccessToken(_token string) bool {
+func (h *Handler) verifyAccessToken(token string) bool {
 	// Implement your token verification logic here
 	// This could involve checking against a database, calling an authentication service, etc.
 	// For this example, we'll just check if the token is not empty
-	// return token != h.t
-	return true
+	return token != h.token
 }
