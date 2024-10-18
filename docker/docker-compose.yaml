@@ -6,8 +6,6 @@ services:
       - ./.bitcoin:/data/env:Z
       - ../example/bitcoin.${NETWORK:-testnet}.conf:/data/.bitcoin/bitcoin.conf
       - ./run.sh:/run.sh
-    env_file:
-      - .env
     entrypoint: /run.sh entrypoint
     # entrypoint: ["sleep", "infinity"]
     # command: 
@@ -31,8 +29,6 @@ services:
       context: ../
       dockerfile: docker/Dockerfile
     image: "scalarorg/protocol-signer:latest"
-    env_file:
-      - .env
     volumes:
       - ../example/config.toml:/home/protocol-signer/.signer/config.toml:Z
     # entrypoint: sleep infinity
