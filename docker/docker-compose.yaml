@@ -5,8 +5,7 @@ services:
     volumes:
       - ../example/bitcoin.${NETWORK:-testnet}.conf:/data/.bitcoin/bitcoin.conf
       - ./run.sh:/run.sh
-    #  - ./.bitcoin:/data/env:Z
-    entrypoint: /run.sh entrypoint
+    entrypoint: /run.sh entrypoint -testnet
     # entrypoint: ["sleep", "infinity"]
     # command: 
     #   - -testnet 
@@ -22,6 +21,8 @@ services:
     ports:
       - "18332:18332"
       - "18333:18333"
+    expose:
+      - "18332"
 
   protocol-signer:
     container_name: protocol-signer
@@ -37,5 +38,3 @@ services:
     # entrypoint: sleep infinity
     entrypoint: ["protocol-signer", "start"]  
     command: ["--config", "/home/protocol-signer/.signer/config.toml"]
-
-

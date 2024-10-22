@@ -1,7 +1,6 @@
 package btc
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"sort"
@@ -166,7 +165,16 @@ func signSegWitV1ScriptSpend(in *psbt.PInput, tx *wire.MsgTx,
 func FinalizePsbt(packet *psbt.Packet, signedInputs []uint32) error {
 	for idx := range signedInputs {
 		input := &packet.Inputs[idx]
+		for _, sig := range input.TaprootScriptSpendSig {
+			fmt.Println("sig", sig)
+		}
+
 		sortTaprootSigsByPubKey(input)
+
+		for _, sig := range input.TaprootScriptSpendSig {
+			fmt.Println("sig", sig)
+		}
+
 		success, err := psbt.MaybeFinalize(packet, idx)
 		if err != nil {
 			return err
@@ -178,9 +186,71 @@ func FinalizePsbt(packet *psbt.Packet, signedInputs []uint32) error {
 	return nil
 }
 
-func sortTaprootSigsByPubKey(input *psbt.PInput) {
+func sortTaprootSigsByPubKey(input *psbt.PInput) error {
+	// revert the order of the input.TaprootScriptSpendSig
 	sort.Slice(input.TaprootScriptSpendSig, func(i, j int) bool {
-		return bytes.Compare(input.TaprootScriptSpendSig[i].XOnlyPubKey[:],
-			input.TaprootScriptSpendSig[j].XOnlyPubKey[:]) < 0
+		return i > j
 	})
+	return nil
 }
+
+// Add this custom struct
+// type taprootScriptSpendSigWithPosition struct {
+// 	*psbt.TaprootScriptSpendSig
+// 	Position int
+// }
+
+// func sortTaprootSigsByPubKey(input *psbt.PInput, leaf txscript.TapLeaf) error {
+// 	leafHash := leaf.TapHash()
+
+// 	// Filter signatures by leaf hash and add position information
+// 	var sigs []*taprootScriptSpendSigWithPosition
+// 	for _, sig := range input.TaprootScriptSpendSig {
+// 		if bytes.Equal(sig.LeafHash, leafHash[:]) {
+// 			pos, err := pubkeyPositionInScript(sig.XOnlyPubKey, leaf.Script)
+// 			if err != nil {
+// 				return fmt.Errorf("error finding pubkey position: %w", err)
+// 			}
+// 			sigs = append(sigs, &taprootScriptSpendSigWithPosition{
+// 				TaprootScriptSpendSig: sig,
+// 				Position:              pos,
+// 			})
+// 		}
+// 	}
+
+// 	// Sort signatures by position in descending order
+// 	sort.Slice(sigs, func(i, j int) bool {
+// 		return sigs[i].Position > sigs[j].Position
+// 	})
+
+// 	// Update the input with sorted signatures
+// 	input.TaprootScriptSpendSig = make([]*psbt.TaprootScriptSpendSig, len(sigs))
+// 	for i, sig := range sigs {
+// 		input.TaprootScriptSpendSig[i] = sig.TaprootScriptSpendSig
+// 	}
+
+// 	return nil
+// }
+
+// func pubkeyPositionInScript(pubkey []byte, script []byte) (int, error) {
+// 	pubkeyHash := btcutil.Hash160(pubkey)
+// 	pubkeyXOnly := pubkey // Note: pubkey is already x-only in Go implementation
+
+// 	decompiled, err := txscript.DisasmString(script)
+// 	if err != nil {
+// 		return -1, fmt.Errorf("error decompiling script: %w", err)
+// 	}
+
+// 	elements := strings.Split(decompiled, " ")
+// 	for i, element := range elements {
+// 		data, err := hex.DecodeString(element)
+// 		if err != nil {
+// 			continue // Skip non-hex elements (opcodes)
+// 		}
+// 		if bytes.Equal(data, pubkey) || bytes.Equal(data, pubkeyHash) || bytes.Equal(data, pubkeyXOnly) {
+// 			return i, nil
+// 		}
+// 	}
+
+// 	return -1, fmt.Errorf("pubkey not found in script")
+// }

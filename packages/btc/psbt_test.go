@@ -19,9 +19,9 @@ var signerClient *btc.BtcClient
 
 func TestMain(m *testing.M) {
 	c, err := btc.NewBtcClient(&config.ParsedBtcConfig{
-		Host:    "192.168.1.34:18332",
-		User:    "user",
-		Pass:    "password",
+		Host:    "testnet3.btc.scalar.org:80",
+		User:    "mike",
+		Pass:    "apd3g41pkl",
 		Network: &chaincfg.TestNet3Params,
 	})
 
@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 // go test -run ^TestSignPsbt$ github.com/scalarorg/protocol-signer/packages/btc -v -count=1
 
 func TestSignPsbt(t *testing.T) {
-	btcAddressString := "bcrt1qp0pyg95qusxrvqn2vggjz926u0gvxk8psuwpw6"
+	btcAddressString := "tb1qwdw0aymdetu7gnfajk39gfx6w5wtavggzrv6nd"
 
 	btcAddress, err := btcutil.DecodeAddress(btcAddressString, &chaincfg.RegressionNetParams)
 	if err != nil {
@@ -53,7 +53,7 @@ func TestSignPsbt(t *testing.T) {
 
 	fmt.Println("privKey", privKey)
 
-	stakerPsbt := "cHNidP8BAFICAAAAAfplYlPYiWq48xv17k+OjtsWPWOJ2t1Iwv9RMlpBOSSYAAAAAAD9////Adi9AAAAAAAAFgAUmZG33OeZPn7n2tGSGWLWM2jk2ywAAAAAAAEBK4A4AQAAAAAAIlEgZoZJC6/8BXk60MZskWty6TNnjVmiQmIf4Higz2oTwLxBFE2u4mlM/5UIwIvQi7E9BvJ82TRF2eUzBgjd0HLFOZdpyZwNkOxbWoGdiVt2TnXUBrJA/oLeJ9lEgzqUyEQQ/9ZANKTY4jop4juxWM0Hm4vt2yMzgha8UnjIWsp+txlEbL+QC64Cegzedo92/YLf2xtnFQJZrpz8g/1oOxwY+bKzuWIVwVCSm3TBoElUt4tLYDXpel4HiloPKOyW1Ue/7prOgDrA8bHBS6OxMxFOaySwPemFsAipfLUVGN+1L5k4xErTLtVlsDbZjCe3tS9xwW+YzniA+XD7CDZJaOPE5ZxucesTIEUgTa7iaUz/lQjAi9CLsT0G8nzZNEXZ5TMGCN3QcsU5l2mtIBC+QfJMDdXQjFhk6kCYegEgCgTq56IKOxkia2W6PMDerMAAAA=="
+	stakerPsbt := "cHNidP8BAFICAAAAAflAdaiII1fkBTGGT8vk5a3YUWMTPqgFB/KD0IpN9O/aAAAAAAD9////AXjiCgAAAAAAFgAUUNzsoVipyHLrQF1SKT01ERBXLJ4AAAAAAAEBKwA1DAAAAAAAIlEgUiPouA919Arm/mld5UVulY4HFUe3CUvidmtDCJyUOHRBFCrjHqhwmu2oGUuj4vfn6V5oDotlE1yJg8CimNF7xTUKGqpwf1oaV/8WEF+uunL1V6iWOpitlLONjh+Oud3IvilAW9mng7KEV1Vas9AVDCPPKGEDxkZD7gml1V5/7wS3xuOsiDffs8Gi4zChnzTWEx6q5/M/Yl/lbvunNGt2AdpVu2IVwVCSm3TBoElUt4tLYDXpel4HiloPKOyW1Ue/7prOgDrAFuIuioNMBacc5AXCkPpmmlMAQJR7esmfH/PGLWmWX25mR0dHHl1WKnImL8iqD3X/VURzLq83wrCHDtY3AZcpEkUgKuMeqHCa7agZS6Pi9+fpXmgOi2UTXImDwKKY0XvFNQqtIPNYZ068zmiDKsMCuC7Hzk6c3Y+FZoTKPVRWhqJAvhXYrMAAAA=="
 
 	packet, err := psbt.NewFromRawBytes(strings.NewReader(stakerPsbt), true)
 	if err != nil {

@@ -78,5 +78,5 @@ func (h *Handler) verifyAccessToken(token string) bool {
 	// Implement your token verification logic here
 	// This could involve checking against a database, calling an authentication service, etc.
 	// For this example, we'll just check if the token is not empty
-	return token != h.token
+	return token == h.token
 }
