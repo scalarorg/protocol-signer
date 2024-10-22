@@ -70,7 +70,7 @@ func TestSignPsbt(t *testing.T) {
 	}
 
 	// Proceed with finalization
-	err = btc.FinalizePsbt(packet, result)
+	err = btc.FinalizePsbt(packet, result, false)
 	if err != nil {
 		t.Fatalf("Failed to finalize PSBT: %v", err)
 	}

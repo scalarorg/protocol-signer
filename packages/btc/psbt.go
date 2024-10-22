@@ -14,7 +14,7 @@ import (
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 )
 
-func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
+func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet, sortSigs bool) (*wire.MsgTx, error) {
 	//TODO: fix hardcode
 	err := s.client.UnlockWallet(60, s.passphrase)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 	}
 
 	// Proceed with finalization
-	err = FinalizePsbt(psbtPacket, signedInputs)
+	err = FinalizePsbt(psbtPacket, signedInputs, sortSigs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to finalize PSBT: %w", err)
 	}
@@ -162,14 +162,17 @@ func signSegWitV1ScriptSpend(in *psbt.PInput, tx *wire.MsgTx,
 	return nil
 }
 
-func FinalizePsbt(packet *psbt.Packet, signedInputs []uint32) error {
+func FinalizePsbt(packet *psbt.Packet, signedInputs []uint32, sortSigs bool) error {
 	for idx := range signedInputs {
 		input := &packet.Inputs[idx]
 		for _, sig := range input.TaprootScriptSpendSig {
 			fmt.Println("sig", sig)
 		}
 
-		sortTaprootSigsByPubKey(input)
+		if sortSigs {
+			fmt.Println("sorting sigs")
+			sortTaprootSigsByPubKey(input)
+		}
 
 		for _, sig := range input.TaprootScriptSpendSig {
 			fmt.Println("sig", sig)

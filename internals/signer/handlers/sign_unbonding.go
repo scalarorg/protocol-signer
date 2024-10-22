@@ -56,14 +56,27 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Unable to parse Psbt")
 	}
 
-	finalTx, err := h.signer.SignPsbt(packet)
+	finalTx, err := h.signer.SignPsbt(packet, false)
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
 
 	txid, err := h.broadcaster.RpcClient.SendRawTransaction(finalTx, false)
 	if err != nil {
-		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
+		newPacket, err := psbt.NewFromRawBytes(strings.NewReader(payload.UnbondingPsbt), true)
+		if err != nil {
+			return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Unable to parse Psbt")
+		}
+
+		finalTx, err = h.signer.SignPsbt(newPacket, true)
+		if err != nil {
+			return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
+		}
+
+		txid, err = h.broadcaster.RpcClient.SendRawTransaction(finalTx, false)
+		if err != nil {
+			return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
+		}
 	}
 
 	result := &types.SignAndBroadcastPsbtReponse{
