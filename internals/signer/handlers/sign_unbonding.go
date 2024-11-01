@@ -44,39 +44,26 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Chain not found")
 	}
 
-	err = evmClient.CheckUnbondingTx(request.Context(), txHash, payload.UnbondingPsbt)
+	err = evmClient.CheckUnbondingTx(request.Context(), txHash, payload.UnbondingPsbtBase64)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest,
 			fmt.Sprintf("Error checking unbonding tx: %s", err.Error()))
 	}
 
-	packet, err := psbt.NewFromRawBytes(strings.NewReader(payload.UnbondingPsbt), true)
+	packet, err := psbt.NewFromRawBytes(strings.NewReader(payload.UnbondingPsbtBase64), true)
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Unable to parse Psbt")
 	}
 
-	finalTx, err := h.signer.SignPsbt(packet, false)
+	finalTx, err := h.signer.SignPsbt(packet)
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
 
 	txid, err := h.broadcaster.RpcClient.SendRawTransaction(finalTx, false)
 	if err != nil {
-		newPacket, err := psbt.NewFromRawBytes(strings.NewReader(payload.UnbondingPsbt), true)
-		if err != nil {
-			return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest, "Unable to parse Psbt")
-		}
-
-		finalTx, err = h.signer.SignPsbt(newPacket, true)
-		if err != nil {
-			return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
-		}
-
-		txid, err = h.broadcaster.RpcClient.SendRawTransaction(finalTx, false)
-		if err != nil {
-			return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
-		}
+		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
 
 	result := &types.SignAndBroadcastPsbtReponse{

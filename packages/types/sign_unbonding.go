@@ -10,7 +10,7 @@ import (
 type SignUnbondingTxRequest struct {
 	EvmChainName  string `json:"evm_chain_name"`
 	EvmTxID       string `json:"evm_tx_id"`
-	UnbondingPsbt string `json:"unbonding_psbt"` // base64 encoded psbt
+	UnbondingPsbtBase64 string `json:"unbonding_psbt_base64"` // base64 encoded psbt, if you want to change raw hex, please think about your life.
 }
 
 // SignUnbondingTxResponse covenant member schnorr signature

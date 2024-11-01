@@ -39,3 +39,38 @@ test:
 
 test-e2e:
 	go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1 --tags=e2e
+
+
+
+
+
+
+
+
+
+
+
+# Update this path to where bitcoin-vault is located in your system
+BITCOIN_VAULT_PATH := $(shell go list -f '{{.Dir}}' github.com/scalarorg/bitcoin-vault/ffi/go-psbt)
+
+.PHONY: build run
+
+# For MacOS
+build-darwin:
+	CGO_LDFLAGS="-L$(BITCOIN_VAULT_PATH)/lib/darwin -lbitcoin_vault_ffi" \
+	CGO_CFLAGS="-I$(BITCOIN_VAULT_PATH)/lib/darwin" \
+	go build -o bin/main ./go-ffi/main.go
+
+# For Linux
+build-linux:
+	CGO_LDFLAGS="-L$(BITCOIN_VAULT_PATH)/lib/linux -lbitcoin_vault_ffi" \
+	CGO_CFLAGS="-I$(BITCOIN_VAULT_PATH)/lib/linux" \
+	go build -o bin/main ./go-ffi/main.go
+
+# Run the application (MacOS)
+run-darwin: build-darwin
+	DYLD_LIBRARY_PATH=$(BITCOIN_VAULT_PATH)/lib/darwin ./bin/main
+
+# Run the application (Linux)
+run-linux: build-linux
+	LD_LIBRARY_PATH=$(BITCOIN_VAULT_PATH)/lib/linux ./bin/main

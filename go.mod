@@ -1,8 +1,8 @@
 module github.com/scalarorg/protocol-signer
 
-go 1.22.3
+go 1.23
 
-toolchain go1.22.4
+toolchain go1.23.2
 
 require (
 	github.com/axelarnetwork/utils v0.0.0-20230706045331-b7aacc1f4a2f
@@ -134,6 +134,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
+	github.com/scalarorg/bitcoin-vault/ffi/go-psbt v0.0.0-20241101071121-9945cdb26b57 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
