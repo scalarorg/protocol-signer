@@ -53,6 +53,8 @@ func (c *BtcConfig) Parse() (*ParsedBtcConfig, error) {
 
 func (cfg *BtcConfig) getBtcNetworkParams() (*chaincfg.Params, error) {
 	switch cfg.Network {
+	case "testnet4":
+		return &chaincfg.TestNet3Params, nil // TODO: Change to TestNet4Params
 	case "testnet3":
 		return &chaincfg.TestNet3Params, nil
 	case "mainnet":

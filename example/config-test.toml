@@ -19,7 +19,7 @@ network = "testnet4"
 
 [btc-signer-config]
 # Btc node host
-host = "bitcoind:48332" # mapped port in docker-compose.yaml
+host = "localhost:48332" # mapped port in docker-compose.yaml
 
 # Btc node user
 user = "user"

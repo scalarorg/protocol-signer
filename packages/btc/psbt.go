@@ -35,9 +35,6 @@ func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 	}
 
 	privKeyBytes := privKey.Serialize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode private key: %w", err)
-	}
 
 	var buf bytes.Buffer
 	err = psbtPacket.Serialize(&buf)
@@ -65,7 +62,9 @@ func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 		log.Fatal(err)
 	}
 
-	var finalTx *wire.MsgTx
+	fmt.Printf("tx: %s\n", hex.EncodeToString(tx))
+
+	finalTx := &wire.MsgTx{}
 	err = finalTx.Deserialize(bytes.NewReader(tx))
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())

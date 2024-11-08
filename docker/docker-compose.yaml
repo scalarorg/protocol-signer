@@ -1,14 +1,15 @@
 services:
-  bitcoind:
-    image: lncm/bitcoind:v26.1
-    container_name: bitcoind
+  bitcoin-testnet4:
+    image: mocacinno/btc_testnet4:bci_node
+    privileged: true
+    container_name: bitcoin-testnet4
     volumes:
-      - ../example/bitcoin.${NETWORK:-testnet}.conf:/data/.bitcoin/bitcoin.conf
+      - ../example/bitcoin.${NETWORK:-testnet}.conf:/root/.bitcoin/bitcoin.conf
       - ./run.sh:/run.sh
-    entrypoint: /run.sh entrypoint -testnet
+    entrypoint: /run.sh entrypoint
     # entrypoint: ["sleep", "infinity"]
-    # command: 
-    #   - -testnet 
+    # command:
+    #   - -testnet
     #   - -rpcbind=${RPC_BIND:-127.0.0.1:18332}
     #   - -rpcuser=${RPC_USER:-user}
     #   - -rpcpassword=${RPC_PASS:-password}
@@ -19,14 +20,12 @@ services:
     #   - -connect=${CONNECT:-0}
     #   - -daemon=${DAEMON:-1}
     ports:
-      - "18332:18332"
-      - "18333:18333"
-    expose:
-      - "18332"
+      - "48332:18332"
+      - "48333:18333"
 
   protocol-signer:
     container_name: protocol-signer
-    build: 
+    build:
       context: ../
       dockerfile: docker/Dockerfile
     image: "scalarorg/protocol-signer:latest"
@@ -35,5 +34,5 @@ services:
       - "2112:2112"
     volumes:
       - ../example/config.toml:/home/protocol-signer/.signer/config.toml:Z
-    entrypoint: ["protocol-signer", "start"]  
+    entrypoint: ["protocol-signer", "start"]
     command: ["--config", "/home/protocol-signer/.signer/config.toml"]

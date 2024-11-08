@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/btcsuite/btcd/btcutil/psbt"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/scalarorg/protocol-signer/packages/btc"
 	"github.com/scalarorg/protocol-signer/packages/evm"
 )
@@ -61,4 +64,12 @@ func (h *Handler) getEvmClient(chainName string) (*evm.EvmClient, error) {
 		}
 	}
 	return nil, fmt.Errorf("evm client not found for chain name: %s", chainName)
+}
+
+func (h *Handler) SignPsbt(packet *psbt.Packet) (*wire.MsgTx, error) {
+	return h.signer.SignPsbt(packet)
+}
+
+func (h *Handler) BroadcastTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
+	return h.broadcaster.RpcClient.SendRawTransaction(tx, false)
 }

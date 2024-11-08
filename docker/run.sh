@@ -1,48 +1,37 @@
 #!/bin/sh
-# wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz -o /root/bitcoin-26.0-x86_64-linux-gnu.tar.gz
-# wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
-# tar -xvf bitcoin-26.0-x86_64-linux-gnu.tar.gz
-# sudo ln -sf bitcoin-26.0/bin/bitcoind /usr/bin/bitcoind
-# bitcoind
-start_bitcoind() {
-    bitcoind -testnet \
-      -rpcbind=${RPC_BIND:-127.0.0.1:18332} \
-      -rpcuser=${RPC_USER:-user} \
-      -rpcpassword=${RPC_PASS:-password} \
-      -rpcallowip=${RPC_ALLOWIP:-127.0.0.1/0} \
-      -datadir=${DATADIR:-/data/.bitcoin} \
-      -server=${SERVER:-1} \
-      -txindex=${TXINDEX:-1} \
-      -connect=${CONNECT:-0} \
-      -daemon=${DAEMON:-1}
-}
+
 createwallet() {
-   bitcoin-cli -named createwallet \
-        wallet_name=${WALLET_NAME:-protocol} \
-        passphrase=${WALLET_PASSPHRASE:-protocol} \
-        load_on_startup=true \
-        descriptors=false # create legacy wallet
+    echo "Creating wallet"
+    bitcoin-cli createwallet "protocol" false false protocol false false true
 }
-getnewaddress() {
-    BTC_ADDRESS=$(bitcoin-cli getnewaddress)
-    OUT_DIR=${DATADIR:-/data}
-    bitcoin-cli walletpassphrase ${WALLET_PASSPHRASE:-protocol} 60
-    if [ -f $OUT_DIR/addressinfo.txt ]; then
-        echo "addressinfo.txt already exists"
-        echo $OUT_DIR/addressinfo.txt
-    else
-        bitcoin-cli getaddressinfo $BTC_ADDRESS>$OUT_DIR/addressinfo.txt
-        bitcoin-cli dumpprivkey $BTC_ADDRESS>$OUT_DIR/privkey.txt
-    fi
+
+importwallet() {
+    echo "Importing wallet"
+    bitcoin-cli walletpassphrase protocol 60
+    bitcoin-cli importprivkey "cVpL6mBRYV3Dmkx87wfbtZ4R3FTD6g58VkTt1ERkqGTMzTcDVw5M"
 }
-entrypoint() {
-    bitcoind $@
-    while ! nc -z 127.0.0.1 18332; do
+
+dumpprivkey() {
+    echo "Dumping private key"
+    bitcoin-cli dumpprivkey $1 >>/root/privkey.txt
+}
+
+wait_for_bitcoin_port() {
+    echo "Waiting for Bitcoin RPC port 18332..."
+    while ! timeout 1 bash -c "echo > /dev/tcp/localhost/18332" 2>/dev/null; do
+        echo "Still waiting for Bitcoin RPC port..."
         sleep 1
     done
+    echo "Bitcoin RPC port is available"
+}
+
+entrypoint() {
+    bitcoind $@
+    wait_for_bitcoin_port
     createwallet
-    getnewaddress
+    importwallet
+    dumpprivkey "tb1q37dgjm7e7h385aykhd6gps7uqx0kv26w2ugu8c"
     sleep infinity
 }
 
-$@   
+$@
