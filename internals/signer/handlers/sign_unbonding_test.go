@@ -1,6 +1,8 @@
 package handlers_test
 
 import (
+	"bytes"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -52,6 +54,7 @@ func TestMain(m *testing.M) {
 }
 
 // Note: To run this test, must build bitcoin-vault-ffi first then copy to the lib folder
+// cp -p ../../bitcoin-vault/target/release/libbitcoin_vault_ffi.* ./lib
 
 // CGO_LDFLAGS="-L./lib -lbitcoin_vault_ffi" CGO_CFLAGS="-I./lib" go test -timeout 10m -run ^TestSignUnBondingIngoreCheckOnEvm$ github.com/scalarorg/protocol-signer/internals/signer/handlers -v -count=1
 func TestSignUnBondingIngoreCheckOnEvm(t *testing.T) {
@@ -73,18 +76,17 @@ func TestSignUnBondingIngoreCheckOnEvm(t *testing.T) {
 		t.Fatalf("Failed to sign PSBT: %v", err)
 	}
 
-	for _, txIn := range finalTx.TxIn {
-		fmt.Printf("txIn: %+v\n", txIn)
+	buf := new(bytes.Buffer)
+	finalTx.Serialize(buf)
+	txHex := hex.EncodeToString(buf.Bytes())
+
+	fmt.Printf("finalTx: %s\n", txHex)
+
+	if txHex != "02000000000101df622397b9240da1c3334c3e1ad432af66a6beca9ae7cb94e74322521528619e0000000000fdffffff01282300000000000016001450dceca158a9c872eb405d52293d351110572c9e0440e7757536ce5cf4246485d74cfc14d74821acefd8ccba32c92a1c6852b1219d82320ea9868bb57e552be3bc8fea5f9a214006d4d2e87476df815bce6a18f68d4e400addd97a3e1e1aa7daf64b77e4356d629c33918afea40c9c10227eba3425a258e32a606ec141005a9b4db68f5ebcdc9d2c7165d272269d817b1433a9ed78d2f944202ae31ea8709aeda8194ba3e2f7e7e95e680e8b65135c8983c0a298d17bc5350aad201387aab21303782b17e760c670432559df3968e52cb82cc2d8f9be43a227d5dcac41c050929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0b03e4f11ba594a5e348a85f4c2d16f3b9b19be3eeff494c12c3050153585255000000000" {
+		t.Fatalf("txHex is empty")
 	}
 
-	for _, txOut := range finalTx.TxOut {
-		fmt.Printf("txOut: %+v\n", txOut)
-	}
 
-	// log witness
-	for _, txIn := range finalTx.TxIn {
-		fmt.Printf("txIn: %+v\n", txIn.Witness)
-	}
 
 	// txid, err := mockHandler.BroadcastTx(finalTx)
 	// if err != nil {

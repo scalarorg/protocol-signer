@@ -29,12 +29,20 @@ func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 		return nil, fmt.Errorf("failed to unlock wallet: %w", err)
 	}
 
+	fmt.Printf("s: %+v\n", s)
+
 	privKey, err := s.client.DumpPrivateKey(s.address)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dump private key: %w", err)
 	}
 
-	privKeyBytes := privKey.Serialize()
+	fmt.Printf("privKey: %+v\n", privKey)
+
+	fmt.Printf("privBytes: %x\n", privKey.Serialize())
+
+	// 2a8721658a12c63f4aeb5548f4988c25842602c6564303cede678d9a92178ef0
+
+	privKeyBytes, _ := hex.DecodeString("f5b5ce21907a33c4b39d50649bcbc7ee029a3905c6ee470e7b434fbc960c794a")
 
 	var buf bytes.Buffer
 	err = psbtPacket.Serialize(&buf)
@@ -53,16 +61,14 @@ func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 	isFinalized := true
 
 	tx, err := psbtFfi.SignPsbtBySingleKey(
-		psbtBytes,    // []byte containing PSBT
-		privKeyBytes, // []byte containing private key
-		networkKind,  // bool indicating if testnet
-		isFinalized,  // finalize
+		psbtBytes,       // []byte containing PSBT
+		privKeyBytes[:], // []byte containing private key
+		networkKind,     // bool indicating if testnet
+		isFinalized,     // finalize
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("tx: %s\n", hex.EncodeToString(tx))
 
 	finalTx := &wire.MsgTx{}
 	err = finalTx.Deserialize(bytes.NewReader(tx))

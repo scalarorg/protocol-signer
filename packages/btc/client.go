@@ -231,7 +231,10 @@ func (w *BtcClient) UnlockWallet(timoutSec int64, passphrase string) error {
 }
 
 func (w *BtcClient) DumpPrivateKey(address btcutil.Address) (*btcec.PrivateKey, error) {
+	fmt.Printf("address: %s\n", address.String())
 	privKey, err := w.RpcClient.DumpPrivKey(address)
+
+	fmt.Printf("privKey: %+v\n", privKey)
 
 	if err != nil {
 		return nil, err
