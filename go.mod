@@ -22,7 +22,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/prometheus/client_golang v1.12.0
 	github.com/rs/zerolog v1.15.0
-	github.com/scalarorg/bitcoin-vault/ffi/go-psbt v0.0.0-20241107015423-276479294bd4
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
@@ -135,6 +134,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
+	github.com/scalarorg/bitcoin-vault/ffi/go-psbt v0.0.0-20241109041445-259383791cda
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect

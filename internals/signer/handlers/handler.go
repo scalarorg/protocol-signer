@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil/psbt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
@@ -72,4 +73,8 @@ func (h *Handler) SignPsbt(packet *psbt.Packet) (*wire.MsgTx, error) {
 
 func (h *Handler) BroadcastTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
 	return h.broadcaster.SendTx(tx)
+}
+
+func (h *Handler) TestMempoolAccept(txs []*wire.MsgTx, maxFeeRatePerKb float64) ([]*btcjson.TestMempoolAcceptResult, error) {
+	return h.broadcaster.TestMempoolAccept(txs, maxFeeRatePerKb)
 }

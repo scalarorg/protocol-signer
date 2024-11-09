@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 )
@@ -62,6 +63,9 @@ func (c *RawRpcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
 	}
 
 	return chainhash.NewHashFromStr(txidStr)
+}
+func (c *RawRpcClient) TestMempoolAccept(txs []*wire.MsgTx) ([]*btcjson.TestMempoolAcceptResult, error) {
+	return nil, nil
 }
 
 func (c *RawRpcClient) sendRequest(method string, params []interface{}, response interface{}) error {

@@ -620,6 +620,8 @@ github.com/sagikazarmark/slog-shim v0.1.0/go.mod h1:SrcSrq8aKtyuqEI1uvTDTK1arOWR
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/scalarorg/bitcoin-vault/ffi/go-psbt v0.0.0-20241107015423-276479294bd4 h1:VogzXxsldojYSuL6bKHQz31LbxPfpUWEb++vUTD45HU=
 github.com/scalarorg/bitcoin-vault/ffi/go-psbt v0.0.0-20241107015423-276479294bd4/go.mod h1:KNnz76g/34hOZmqLMPSKztpjVCS+ggDViUu3p2mzsX8=
+github.com/scalarorg/bitcoin-vault/ffi/go-psbt v0.0.0-20241109041445-259383791cda h1:iXMeLqm8bQIFADj+AkdPZQAtQ/UK0ml+zk813SgtSpE=
+github.com/scalarorg/bitcoin-vault/ffi/go-psbt v0.0.0-20241109041445-259383791cda/go.mod h1:KNnz76g/34hOZmqLMPSKztpjVCS+ggDViUu3p2mzsX8=
 github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible h1:Bn1aCHHRnjv4Bl16T8rcaFjYSrGrIZvpiGO6P3Q4GpU=
 github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible/go.mod h1:5b4v6he4MtMOwMlS0TUMTu2PcXUg8+E1lC7eC3UO/RA=
 github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=

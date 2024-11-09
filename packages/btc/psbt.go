@@ -43,10 +43,10 @@ func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 	}
 	psbtBytes := buf.Bytes()
 
-	isTestnet := true // TODO: FIX THIS HARDCODE by checking the network
+	// isTestnet := true // TODO: FIX THIS HARDCODE by checking the network
 
 	networkKind := psbtFfi.NetworkKindTestnet
-	if !isTestnet {
+	if s.client.Network == "mainnet" {
 		networkKind = psbtFfi.NetworkKindMainnet
 	}
 

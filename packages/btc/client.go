@@ -51,6 +51,7 @@ func nofitierStateToClientState(state notifier.TxConfStatus) TxStatus {
 
 type BtcClient struct {
 	RpcClient *rpcclient.Client
+	Network   string
 }
 
 type PsbtSigner struct {
@@ -96,21 +97,92 @@ func btcConfigToConnConfig(cfg *config.ParsedBtcConfig) *rpcclient.ConnConfig {
 
 type BtcClientInterface interface {
 	SendTx(tx *wire.MsgTx) (*chainhash.Hash, error)
+	TestMempoolAccept(txs []*wire.MsgTx, maxFeeRatePerKb float64) ([]*btcjson.TestMempoolAcceptResult, error)
 }
 
 // client from config
-func NewBtcClient(cfg *config.ParsedBtcConfig) (*BtcClient, error) {
+func NewBtcClient(cfg *config.ParsedBtcConfig, network string) (*BtcClient, error) {
 	rpcClient, err := rpcclient.New(btcConfigToConnConfig(cfg), nil)
 
 	if err != nil {
 		return nil, err
 	}
-
-	return &BtcClient{RpcClient: rpcClient}, nil
+	return &BtcClient{RpcClient: rpcClient, Network: network}, nil
 }
 
 func (c *BtcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
-	return c.RpcClient.SendRawTransaction(tx, true)
+	// If testnet4, create Command then call c.RpcClient.SendCmd(cmd)
+	if c.Network == "testnet4" {
+		rawTx, err := createRawTx(tx)
+		if err != nil {
+			return nil, err
+		}
+		allowHighFees := true
+		cmd := btcjson.NewSendRawTransactionCmd(rawTx, &allowHighFees)
+		res := c.RpcClient.SendCmd(cmd)
+		// Cast the response to FutureTestMempoolAcceptResult and call Receive
+		future := rpcclient.FutureSendRawTransactionResult(res)
+		return future.Receive()
+	} else {
+		// Otherwise, call c.RpcClient.SendRawTransaction(tx, true)
+		return c.RpcClient.SendRawTransaction(tx, true)
+	}
+}
+
+func (c *BtcClient) TestMempoolAccept(txs []*wire.MsgTx, maxFeeRatePerKb float64) ([]*btcjson.TestMempoolAcceptResult, error) {
+	if c.Network == "testnet4" {
+		// Add some checks to make sure the txs are valid
+		rawTxns, err := createRawTxs(txs)
+		if err != nil {
+			return nil, err
+		}
+		res := c.RpcClient.SendCmd(btcjson.NewTestMempoolAcceptCmd(rawTxns, maxFeeRatePerKb))
+		// Cast the response to FutureTestMempoolAcceptResult and call Receive
+		future := rpcclient.FutureTestMempoolAcceptResult(res)
+		return future.Receive()
+	} else {
+		return c.RpcClient.TestMempoolAccept(txs, maxFeeRatePerKb)
+	}
+}
+func createRawTx(tx *wire.MsgTx) (string, error) {
+	buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
+	if err := tx.Serialize(buf); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(buf.Bytes()), nil
+}
+
+func createRawTxs(txns []*wire.MsgTx) ([]string, error) {
+	// Iterate all the transactions and turn them into hex strings.
+	rawTxns := make([]string, 0, len(txns))
+	for _, tx := range txns {
+		// Serialize the transaction and convert to hex string.
+		buf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
+
+		// TODO(yy): add similar checks found in `BtcDecode` to
+		// `BtcEncode` - atm it just serializes bytes without any
+		// bitcoin-specific checks.
+		if err := tx.Serialize(buf); err != nil {
+			err = fmt.Errorf("%w: %v", rpcclient.ErrInvalidParam, err)
+			return nil, err
+		}
+
+		rawTx := hex.EncodeToString(buf.Bytes())
+		rawTxns = append(rawTxns, rawTx)
+
+		// Sanity check the provided tx is valid, which can be removed
+		// once we have similar checks added in `BtcEncode`.
+		//
+		// NOTE: must be performed after buf.Bytes is copied above.
+		//
+		// TODO(yy): remove it once the above TODO is addressed.
+		if err := tx.Deserialize(buf); err != nil {
+			err = fmt.Errorf("%w: %v", rpcclient.ErrInvalidParam, err)
+			return nil, err
+		}
+	}
+
+	return rawTxns, nil
 }
 
 // Helpers to easily build transactions

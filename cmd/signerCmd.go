@@ -1,14 +1,11 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/scalarorg/protocol-signer/config"
 	signerservice "github.com/scalarorg/protocol-signer/internals/signer"
 	"github.com/scalarorg/protocol-signer/packages/btc"
-	btcclient "github.com/scalarorg/protocol-signer/packages/btc"
 )
 
 func init() {
@@ -34,22 +31,27 @@ var runSignerCmd = &cobra.Command{
 			return err
 		}
 
-		var broadcaster btc.BtcClientInterface
+		// var broadcaster btc.BtcClientInterface
 
-		if cfg.BtcNodeConfig.Network == "testnet4" {
-			fmt.Println("Using raw rpc client for testnet4")
-			broadcaster, err = btc.NewRawRpcClient(cfg.BtcNodeConfig.Host, cfg.BtcNodeConfig.User, cfg.BtcNodeConfig.Pass, cfg.BtcNodeConfig.Network)
-			if err != nil {
-				return err
-			}
-		} else {
-			broadcaster, err = btc.NewBtcClient(parsedConfig.BtcNodeConfig)
-			if err != nil {
-				return err
-			}
+		// if cfg.BtcNodeConfig.Network == "testnet4" {
+		// 	fmt.Println("Using raw rpc client for testnet4")
+		// 	broadcaster, err = btc.NewRawRpcClient(cfg.BtcNodeConfig.Host, cfg.BtcNodeConfig.User, cfg.BtcNodeConfig.Pass, cfg.BtcNodeConfig.Network)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// } else {
+		// 	broadcaster, err = btc.NewBtcClient(parsedConfig.BtcNodeConfig)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// }
+
+		broadcaster, err := btc.NewBtcClient(parsedConfig.BtcNodeConfig, cfg.BtcNodeConfig.Network)
+		if err != nil {
+			return err
 		}
 
-		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
+		signerClient, err := btc.NewBtcClient(parsedConfig.BtcSignerConfig, cfg.BtcSignerConfig.Network)
 		if err != nil {
 			return err
 		}
