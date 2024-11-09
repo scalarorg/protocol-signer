@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/scalarorg/protocol-signer/config"
@@ -32,9 +34,19 @@ var runSignerCmd = &cobra.Command{
 			return err
 		}
 
-		broadcaster, err := btc.NewBtcClient(parsedConfig.BtcNodeConfig)
-		if err != nil {
-			return err
+		var broadcaster btc.BtcClientInterface
+
+		if cfg.BtcNodeConfig.Network == "testnet4" {
+			fmt.Println("Using raw rpc client for testnet4")
+			broadcaster, err = btc.NewRawRpcClient(cfg.BtcNodeConfig.Host, cfg.BtcNodeConfig.User, cfg.BtcNodeConfig.Pass, cfg.BtcNodeConfig.Network)
+			if err != nil {
+				return err
+			}
+		} else {
+			broadcaster, err = btc.NewBtcClient(parsedConfig.BtcNodeConfig)
+			if err != nil {
+				return err
+			}
 		}
 
 		signerClient, err := btcclient.NewBtcClient(parsedConfig.BtcSignerConfig)
@@ -43,7 +55,7 @@ var runSignerCmd = &cobra.Command{
 		}
 		// TODO: Add options to use customn remote signers
 		// Integrate cubist remote signer
-		signer := btc.NewPsbtSigner(signerClient, parsedConfig.BtcSignerConfig.Address, parsedConfig.BtcSignerConfig.Passphrase)
+		signer := btc.NewPsbtSigner(signerClient, parsedConfig.BtcSignerConfig.Address, parsedConfig.BtcSignerConfig.Passphrase, parsedConfig.BtcSignerConfig.Network)
 
 		srv, err := signerservice.New(
 			cmd.Context(),

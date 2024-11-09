@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/btcutil/psbt"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/scalarorg/protocol-signer/config"
 
@@ -56,10 +57,11 @@ type PsbtSigner struct {
 	client     *BtcClient
 	address    btcutil.Address
 	passphrase string
+	network    *chaincfg.Params
 }
 
-func NewPsbtSigner(client *BtcClient, address string, passphrase string) *PsbtSigner {
-	btcAddress, err := client.RpcClient.GetNewAddress(address)
+func NewPsbtSigner(client *BtcClient, address string, passphrase string, network *chaincfg.Params) *PsbtSigner {
+	btcAddress, err := btcutil.DecodeAddress(address, network)
 	if err != nil {
 		panic(err)
 	}
@@ -72,6 +74,7 @@ func NewPsbtSigner(client *BtcClient, address string, passphrase string) *PsbtSi
 		client:     client,
 		address:    btcAddress,
 		passphrase: passphrase,
+		network:    network,
 	}
 }
 
@@ -89,6 +92,10 @@ func btcConfigToConnConfig(cfg *config.ParsedBtcConfig) *rpcclient.ConnConfig {
 		DisableAutoReconnect: false,
 		HTTPPostMode:         true,
 	}
+}
+
+type BtcClientInterface interface {
+	SendTx(tx *wire.MsgTx) (*chainhash.Hash, error)
 }
 
 // client from config
