@@ -42,6 +42,9 @@ func (e *EvmClient) CheckUnbondingTx(ctx context.Context, txHash common.Hash, ps
 				return fmt.Errorf("failed to decode payload: %w", err)
 			}
 
+			fmt.Println("decodedPsbt: ", decodedPsbt)
+			fmt.Println("psbtBase64: ", psbtBase64)
+
 			if decodedPsbt != psbtBase64 {
 				return errors.New("psbt does not match")
 			}
