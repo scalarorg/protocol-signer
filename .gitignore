@@ -26,6 +26,7 @@ protocol-signer
 .bitcoin
 # env file
 .env
-.DS_Store // macOS system file
+# macOS system file
+.DS_Store
 
 lib

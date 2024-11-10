@@ -11,7 +11,9 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/btcutil/psbt"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/rs/zerolog/log"
 	"github.com/scalarorg/protocol-signer/config"
 
 	"github.com/btcsuite/btcd/rpcclient"
@@ -50,16 +52,18 @@ func nofitierStateToClientState(state notifier.TxConfStatus) TxStatus {
 
 type BtcClient struct {
 	RpcClient *rpcclient.Client
+	Network   string
 }
 
 type PsbtSigner struct {
 	client     *BtcClient
 	address    btcutil.Address
 	passphrase string
+	network    *chaincfg.Params
 }
 
-func NewPsbtSigner(client *BtcClient, address string, passphrase string) *PsbtSigner {
-	btcAddress, err := client.RpcClient.GetNewAddress(address)
+func NewPsbtSigner(client *BtcClient, address string, passphrase string, network *chaincfg.Params) *PsbtSigner {
+	btcAddress, err := btcutil.DecodeAddress(address, network)
 	if err != nil {
 		panic(err)
 	}
@@ -72,6 +76,7 @@ func NewPsbtSigner(client *BtcClient, address string, passphrase string) *PsbtSi
 		client:     client,
 		address:    btcAddress,
 		passphrase: passphrase,
+		network:    network,
 	}
 }
 
@@ -91,19 +96,55 @@ func btcConfigToConnConfig(cfg *config.ParsedBtcConfig) *rpcclient.ConnConfig {
 	}
 }
 
+type BtcClientInterface interface {
+	SendTx(tx *wire.MsgTx) (*chainhash.Hash, error)
+	TestMempoolAccept(txs []*wire.MsgTx, maxFeeRatePerKb float64) ([]*btcjson.TestMempoolAcceptResult, error)
+}
+
 // client from config
-func NewBtcClient(cfg *config.ParsedBtcConfig) (*BtcClient, error) {
+func NewBtcClient(cfg *config.ParsedBtcConfig, network string) (*BtcClient, error) {
 	rpcClient, err := rpcclient.New(btcConfigToConnConfig(cfg), nil)
 
 	if err != nil {
 		return nil, err
 	}
-
-	return &BtcClient{RpcClient: rpcClient}, nil
+	return &BtcClient{RpcClient: rpcClient, Network: network}, nil
 }
 
 func (c *BtcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
-	return c.RpcClient.SendRawTransaction(tx, true)
+	// If testnet4, create Command then call c.RpcClient.SendCmd(cmd)
+	if c.Network == "testnet4" {
+		rawTx, err := CreateRawTx(tx)
+		if err != nil {
+			return nil, err
+		}
+		allowHighFees := false
+		log.Debug().Msgf("Send rawTx: %s\n", rawTx)
+		cmd := btcjson.NewSendRawTransactionCmd(rawTx, &allowHighFees)
+		res := c.RpcClient.SendCmd(cmd)
+		// Cast the response to FutureTestMempoolAcceptResult and call Receive
+		future := rpcclient.FutureSendRawTransactionResult(res)
+		return future.Receive()
+	} else {
+		// Otherwise, call c.RpcClient.SendRawTransaction(tx, true)x
+		return c.RpcClient.SendRawTransaction(tx, true)
+	}
+}
+
+func (c *BtcClient) TestMempoolAccept(txs []*wire.MsgTx, maxFeeRatePerKb float64) ([]*btcjson.TestMempoolAcceptResult, error) {
+	if c.Network == "testnet4" {
+		// Add some checks to make sure the txs are valid
+		rawTxns, err := CreateRawTxs(txs)
+		if err != nil {
+			return nil, err
+		}
+		res := c.RpcClient.SendCmd(btcjson.NewTestMempoolAcceptCmd(rawTxns, maxFeeRatePerKb))
+		// Cast the response to FutureTestMempoolAcceptResult and call Receive
+		future := rpcclient.FutureTestMempoolAcceptResult(res)
+		return future.Receive()
+	} else {
+		return c.RpcClient.TestMempoolAccept(txs, maxFeeRatePerKb)
+	}
 }
 
 // Helpers to easily build transactions

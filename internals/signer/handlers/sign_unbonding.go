@@ -8,6 +8,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil/psbt"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/scalarorg/protocol-signer/packages/btc"
 	"github.com/scalarorg/protocol-signer/packages/types"
 )
 
@@ -46,7 +47,6 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 
 	err = evmClient.CheckUnbondingTx(request.Context(), txHash, payload.UnbondingPsbtBase64)
 	if err != nil {
-		fmt.Println("Error: ", err)
 		return nil, types.NewErrorWithMsg(http.StatusBadRequest, types.BadRequest,
 			fmt.Sprintf("Error checking unbonding tx: %s", err.Error()))
 	}
@@ -60,14 +60,22 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
-
-	txid, err := h.broadcaster.RpcClient.SendRawTransaction(finalTx, false)
+	rawTxHex, err := btc.CreateRawTx(finalTx)
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
 
+	//20241110: broadcast tx is untested on testnet4
+	//Response rawTxHex forbroadcasting from relayer
+	//TODO: Test and broadcast here
+	// txid, err := h.broadcaster.SendTx(finalTx)
+	// if err != nil {
+	// 	return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
+	// }
+	txid := finalTx.TxHash()
 	result := &types.SignAndBroadcastPsbtReponse{
-		TxID: txid,
+		TxID:  &txid,
+		TxHex: rawTxHex,
 	}
 
 	return NewResult(result), nil
