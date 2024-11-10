@@ -60,10 +60,15 @@ func (h *Handler) SignUnbonding(request *http.Request) (*Result, *types.Error) {
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
+
+	fmt.Println("finalTx: ", finalTx)
+
 	rawTxHex, err := btc.CreateRawTx(finalTx)
 	if err != nil {
 		return nil, types.NewErrorWithMsg(http.StatusInternalServerError, types.InternalServiceError, err.Error())
 	}
+
+	fmt.Println("rawTxHex: ", rawTxHex)
 
 	//20241110: broadcast tx is untested on testnet4
 	//Response rawTxHex forbroadcasting from relayer

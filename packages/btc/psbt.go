@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"math"
 	"net/http"
 	"sort"
@@ -59,8 +58,10 @@ func (s *PsbtSigner) SignPsbt(psbtPacket *psbt.Packet) (*wire.MsgTx, error) {
 		isFinalized,     // finalize
 	)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
+	fmt.Printf("After signing: %x\n", tx)
 
 	finalTx := &wire.MsgTx{}
 	err = finalTx.Deserialize(bytes.NewReader(tx))

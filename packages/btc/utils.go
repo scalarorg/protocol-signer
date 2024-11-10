@@ -3,9 +3,7 @@ package btc
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
 
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 )
 
@@ -24,10 +22,10 @@ func CreateRawTx(tx *wire.MsgTx) (string, error) {
 	// NOTE: must be performed after buf.Bytes is copied above.
 	//
 	// TODO(yy): remove it once the above TODO is addressed.
-	if err := tx.Deserialize(buf); err != nil {
-		err = fmt.Errorf("%w: %v", rpcclient.ErrInvalidParam, err)
-		return "", err
-	}
+	// if err := tx.Deserialize(buf); err != nil {
+	// 	err = fmt.Errorf("%w: %v", rpcclient.ErrInvalidParam, err)
+	// 	return "", err
+	// }
 	return hex.EncodeToString(buf.Bytes()), nil
 }
 
