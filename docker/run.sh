@@ -17,8 +17,8 @@ dumpprivkey() {
 }
 
 wait_for_bitcoin_port() {
-    echo "Waiting for Bitcoin RPC port 18332..."
-    while ! timeout 1 bash -c "echo > /dev/tcp/localhost/18332" 2>/dev/null; do
+    echo "Waiting for Bitcoin RPC port 48332..."
+    while ! timeout 1 bash -c "echo > /dev/tcp/localhost/48332" 2>/dev/null; do
         echo "Still waiting for Bitcoin RPC port..."
         sleep 1
     done

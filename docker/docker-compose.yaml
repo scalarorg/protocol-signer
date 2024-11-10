@@ -2,7 +2,7 @@ services:
   bitcoin-testnet4:
     image: mocacinno/btc_testnet4:bci_node
     privileged: true
-    container_name: bitcoin-testnet4
+    container_name: bitcoind
     volumes:
       - ../example/bitcoin.${NETWORK:-testnet}.conf:/root/.bitcoin/bitcoin.conf
       - ./run.sh:/run.sh
@@ -19,9 +19,12 @@ services:
     #   - -txindex=${TXINDEX:-1}
     #   - -connect=${CONNECT:-0}
     #   - -daemon=${DAEMON:-1}
-    ports:
-      - "48332:18332"
-      - "48333:18333"
+    # ports:
+    #   - "48332:18332"
+    #   - "48333:18333"
+    expose:
+      - "48332"
+      - "48333"
 
   protocol-signer:
     container_name: protocol-signer
