@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -54,6 +55,9 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println("node config: ", parsedConfig.BtcNodeConfig)
+	fmt.Println("cfg: ", cfg)
 
 	signerClient, err := btc.NewBtcClient(parsedConfig.BtcSignerConfig, cfg.BtcSignerConfig.Network)
 	if err != nil {
@@ -116,4 +120,28 @@ func TestSignUnBondingIngoreCheckOnEvm(t *testing.T) {
 	} else {
 		t.Logf("txid: %s\n", txid)
 	}
+}
+
+// CGO_LDFLAGS="-L./lib -lbitcoin_vault_ffi" CGO_CFLAGS="-I./lib" go test -timeout 10m -run ^TestBroadcastTx$ github.com/scalarorg/protocol-signer/internals/signer/handlers -v -count=1
+func TestBroadcastTx(t *testing.T) {
+	txHex := "020000000001018fa1fc2bec73cec67d9c1e83d28bcf91fff837fc797c637a5fb9d611ce52b2990200000000fdffffff03102700000000000022512067bff357780a93826a444646aec681c4ff1f4316244478c0d611f91a75c93b8a00000000000000003d6a013504531801040100080000000000aa36a714b91e3a8ef862567026d6f376c9f3d6b814ca43371424a1db57fa3ecafcbad91d6ef068439aceeae090f14780000000000016001450dceca158a9c872eb405d52293d351110572c9e0247304402206f02f35c5b0e03ce00923e56d52ac2f780b249afc760e93d0fa7efd2ffa0c30402204f9890b2cd4e917b360d70353c6570fc8cfc5b76a8146269c529e90d61b14f2b0121022ae31ea8709aeda8194ba3e2f7e7e95e680e8b65135c8983c0a298d17bc5350a00000000"
+
+	txBytes, err := hex.DecodeString(txHex)
+	assert.NoError(t, err)
+
+	tx := wire.NewMsgTx(wire.TxVersion)
+	err = tx.Deserialize(bytes.NewReader(txBytes))
+	assert.NoError(t, err)
+
+	amount := tx.TxOut[0].Value
+	t.Logf("amount: %d\n", amount)
+	t.Logf("txInAmount: %d\n", amount)
+
+	results, err := mockHandler.TestMempoolAccept([]*wire.MsgTx{tx}, 0.0001)
+	assert.NoError(t, err)
+	t.Logf("TestMempoolAcceptResults: %+v\n", results[0])
+
+	txId, err := mockHandler.BroadcastTx(tx)
+	assert.NoError(t, err)
+	t.Logf("txid: %s\n", txId)
 }

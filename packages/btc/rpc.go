@@ -11,6 +11,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/rs/zerolog/log"
 )
 
 type RawRpcClient struct {
@@ -35,15 +36,17 @@ type RPCError struct {
 	Message string `json:"message"`
 }
 
-func (c *RawRpcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
+// TODO: Add retry logic
+func (c *RawRpcClient) SendRawTransaction(tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error) {
 
 	buf := bytes.NewBuffer(nil)
 	tx.Serialize(buf)
 
 	txHex := hex.EncodeToString(buf.Bytes())
 
-	allowHighFees := true
-	params := []interface{}{txHex, allowHighFees}
+	fmt.Printf("txHex: %s\n", txHex)
+
+	params := []interface{}{txHex, 0.001}
 	response := &RPCResponse{}
 
 	err := c.sendRequest("sendrawtransaction", params, response)
@@ -51,7 +54,7 @@ func (c *RawRpcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
 		return nil, err
 	}
 
-	fmt.Printf("Response: %+v\n", response)
+	log.Info().Msgf("Response: %+v\n", response)
 
 	if response.Error != nil {
 		return nil, fmt.Errorf("error sending tx: %s", response.Error.Message)
@@ -76,6 +79,8 @@ func (c *RawRpcClient) sendRequest(method string, params []interface{}, response
 		"params":  params,
 	}
 
+	fmt.Printf("Payload: %+v\n", payload)
+
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return err
@@ -90,7 +95,7 @@ func (c *RawRpcClient) sendRequest(method string, params []interface{}, response
 	fmt.Printf("Request: %s\n", req.URL)
 
 	req.SetBasicAuth(c.user, c.pass)
-	req.Header.Set("Content-Type", "text/plain")
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

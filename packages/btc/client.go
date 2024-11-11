@@ -51,8 +51,9 @@ func nofitierStateToClientState(state notifier.TxConfStatus) TxStatus {
 }
 
 type BtcClient struct {
-	RpcClient *rpcclient.Client
-	Network   string
+	RpcClient    *rpcclient.Client
+	Network      string
+	RawRpcClient *RawRpcClient
 }
 
 type PsbtSigner struct {
@@ -108,23 +109,40 @@ func NewBtcClient(cfg *config.ParsedBtcConfig, network string) (*BtcClient, erro
 	if err != nil {
 		return nil, err
 	}
-	return &BtcClient{RpcClient: rpcClient, Network: network}, nil
+
+	if network != "testnet4" {
+		return &BtcClient{RpcClient: rpcClient, Network: network}, nil
+	}
+
+	rawRpcClient, err := NewRawRpcClient(cfg.Host, cfg.User, cfg.Pass, network)
+	if err != nil {
+		return nil, err
+	}
+	return &BtcClient{RpcClient: rpcClient, Network: network, RawRpcClient: rawRpcClient}, nil
 }
 
 func (c *BtcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
 	// If testnet4, create Command then call c.RpcClient.SendCmd(cmd)
 	if c.Network == "testnet4" {
+		// TODO: Refactor this
 		rawTx, err := CreateRawTx(tx)
 		if err != nil {
 			return nil, err
 		}
 		allowHighFees := false
+		_ = allowHighFees
 		log.Debug().Msgf("Send rawTx: %s\n", rawTx)
-		cmd := btcjson.NewSendRawTransactionCmd(rawTx, &allowHighFees)
+		cmd := btcjson.NewSendRawTransactionCmd(rawTx, nil)
 		res := c.RpcClient.SendCmd(cmd)
 		// Cast the response to FutureTestMempoolAcceptResult and call Receive
 		future := rpcclient.FutureSendRawTransactionResult(res)
 		return future.Receive()
+
+		// if c.RawRpcClient == nil {
+		// 	return nil, fmt.Errorf("raw rpc client is not supported for network %s", c.Network)
+		// }
+
+		// return c.RawRpcClient.SendRawTransaction(tx, true)
 	} else {
 		// Otherwise, call c.RpcClient.SendRawTransaction(tx, true)x
 		return c.RpcClient.SendRawTransaction(tx, true)
