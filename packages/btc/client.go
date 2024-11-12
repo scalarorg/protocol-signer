@@ -118,9 +118,10 @@ func (c *BtcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
 		if err != nil {
 			return nil, err
 		}
-		allowHighFees := false
+
 		log.Debug().Msgf("Send rawTx: %s\n", rawTx)
-		cmd := btcjson.NewSendRawTransactionCmd(rawTx, &allowHighFees)
+		maxFeeRate := 0.10
+		cmd := c.creatSendRawTransactionCmd(rawTx, &maxFeeRate)
 		res := c.RpcClient.SendCmd(cmd)
 		// Cast the response to FutureTestMempoolAcceptResult and call Receive
 		future := rpcclient.FutureSendRawTransactionResult(res)
@@ -131,6 +132,17 @@ func (c *BtcClient) SendTx(tx *wire.MsgTx) (*chainhash.Hash, error) {
 	}
 }
 
+// if maxFeeRate is not nil, set the feeSetting parameter
+// otherwise, don't set the feeSetting parameter use default value which is set by bitcoind 0.10
+func (c *BtcClient) creatSendRawTransactionCmd(rawTxHex string, maxFeeRate *float64) *btcjson.SendRawTransactionCmd {
+	if maxFeeRate != nil {
+		return btcjson.NewBitcoindSendRawTransactionCmd(rawTxHex, *maxFeeRate)
+	}
+	return &btcjson.SendRawTransactionCmd{
+		HexTx:      rawTxHex,
+		FeeSetting: nil,
+	}
+}
 func (c *BtcClient) TestMempoolAccept(txs []*wire.MsgTx, maxFeeRatePerKb float64) ([]*btcjson.TestMempoolAcceptResult, error) {
 	if c.Network == "testnet4" {
 		// Add some checks to make sure the txs are valid
